@@ -358,9 +358,9 @@ function ScanIntroduction({
     <section className="scan-intro">
       <div>
         <h1>
-          Know what you&apos;re
+          A neighborhood of you
           <br />
-          <em>really</em> agreeing to.
+          <em>based on what companies collect</em>
         </h1>
         <p>
           See what a company&apos;s terms say it collects, what that could
