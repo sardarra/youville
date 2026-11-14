@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Check, CircleHelp, Home, School, ShieldCheck } from 'lucide-react'
+import { ArrowLeft, Check, CircleHelp, Home, School } from 'lucide-react'
 import { inferenceRules } from '@/data/rules'
 import { samples } from '@/data/mock-data'
 
@@ -20,20 +20,18 @@ export function ExposureGuide({ onBack }: { onBack: () => void }) {
       <button className="back-link" onClick={onBack}><ArrowLeft size={15} /> Back to exposure ledger</button>
       <section className="visual-guide-heading">
         <div>
-          <span className="section-kicker">A PICTURE OF THE COMBINED SIGNALS</span>
-          <h1>Where could the data lead?</h1>
-          <p>This fictional neighborhood updates from verified findings across your exposure ledger.</p>
+          <h1>Your Neighborhood</h1>
+          <p>A visual representation of what you have shared.</p>
         </div>
-        <div className="visual-guide-stamp"><ShieldCheck size={18} /> Based on verified<br />ledger findings</div>
       </section>
       <section className="neighborhood-card" aria-labelledby="neighborhood-title">
         <div className="neighborhood-header">
-          <div><span className="section-kicker">ILLUSTRATIVE NEIGHBORHOOD</span><h2 id="neighborhood-title">Sarcaville</h2></div>
+          <div><h2 id="neighborhood-title">Sardarville</h2></div>
           <span className="not-real-label"><CircleHelp size={14} /> Fictional map · not a real address</span>
         </div>
         <div className="neighborhood-map">
           <svg viewBox="0 0 920 470" role="img" aria-labelledby="map-title map-desc">
-            <title id="map-title">Fictional map of Sarcaville</title>
+            <title id="map-title">Fictional map of Sardarville</title>
             <desc id="map-desc">A conceptual town illustration. Verified ledger evidence determines whether possible home and school locations are highlighted.</desc>
             <rect width="920" height="470" fill="#f3f1e9" />
             <path d="M0 185H920M0 338H920M115 0V470M350 0V470M585 0V470M815 0V470" stroke="#fff" strokeWidth="38" />
