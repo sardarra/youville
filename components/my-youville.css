@@ -1,0 +1,10 @@
+.youville-view { width: 100%; min-width: 0; }
+.youville-scroll-hint { margin: 0; padding: 12px 24px; font-size: 14px; color: #354434; }
+.youville-scroll { width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.youville-scroll:focus-visible { outline: 3px solid #64745d; outline-offset: -3px; }
+.youville-scene-space { position: relative; width: 3277.3px; height: 702px; }
+.youville-scene { position: relative; overflow: hidden; width: 5042px; height: 1080px; transform: scale(.65); transform-origin: top left; }
+@media (max-width: 640px) {
+  .youville-scene-space { width: 2268.9px; height: 486px; }
+  .youville-scene { transform: scale(.45); }
+}

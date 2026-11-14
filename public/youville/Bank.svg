@@ -1,0 +1,40 @@
+<svg width="578" height="370" viewBox="0 0 578 370" fill="none" xmlns="http://www.w3.org/2000/svg">
+<g filter="url(#filter0_dn_20_173)">
+<rect x="97.9443" y="150" width="382.112" height="206.199" fill="white" stroke-width="11" stroke="#E9E8E9"/>
+<rect x="148.09" y="155.27" width="41.2857" height="206.429" fill="#E8E8E9"/>
+<rect x="390.419" y="155.27" width="41.2857" height="206.429" fill="#E8E8E9"/>
+<rect x="306.95" y="149.885" width="41.2857" height="206.429" fill="#E8E8E9"/>
+<rect x="227.071" y="149.885" width="41.2857" height="206.429" fill="#E8E8E9"/>
+<path d="M289 0L539.281 155.495H38.7187L289 0Z" fill="white"/>
+<mask id="stroke0_20_173" fill="white">
+<path d="M289 0L539.281 155.495H38.7187L289 0Z"/>
+</mask>
+<path d="M289 0L539.281 155.495H38.7187L289 0Z" stroke-width="28" stroke="#E9E9E9" mask="url(#stroke0_20_173)"/>
+<path d="M281.84 73.2491C282.127 77.8324 285.278 82.1293 291.293 86.1397V63.9034C291.222 63.9034 291.079 63.9034 290.864 63.9034C284.848 64.6911 281.84 67.8064 281.84 73.2491ZM304.721 112.673C304.721 111.957 304.65 111.241 304.506 110.524C303.79 106.514 300.424 102.862 294.409 99.5674V123.737C301.14 122.735 304.578 119.047 304.721 112.673ZM294.409 135.983H291.293V127.282C284.418 127.282 278.761 126.208 274.321 124.06C269.236 121.553 266.694 118.295 266.694 114.284C266.694 113.496 266.801 112.745 267.016 112.028C268.019 109.235 270.203 107.839 273.569 107.839C275.574 107.839 277.185 108.269 278.403 109.128C279.692 110.131 280.694 112.315 281.411 115.681C281.697 117.185 281.984 118.295 282.27 119.011C283.416 122.377 286.137 124.06 290.434 124.06H291.293V98.0635C291.222 97.9919 291.079 97.9203 290.864 97.8487C283.702 94.3396 279.692 92.3344 278.833 91.8331C272.172 87.8227 268.842 83.0603 268.842 77.546C268.842 73.8936 270.024 70.7068 272.387 67.9854C276.398 63.4737 282.7 61.0388 291.293 60.6807V51.1202H294.409V60.6807C298.706 60.8956 302.609 61.6475 306.118 62.9366C312.062 65.2283 315.034 68.4151 315.034 72.4971C315.034 72.9984 314.998 73.5355 314.926 74.1085C314.353 77.2595 312.456 78.835 309.233 78.835C307.371 78.835 305.867 78.4411 304.721 77.6534C303.504 76.7224 302.573 74.6456 301.928 71.4229C301.713 70.0622 301.499 69.0596 301.284 68.4151C300.353 65.3357 298.061 63.796 294.409 63.796V87.751C294.767 87.8943 295.161 88.0733 295.59 88.2881C302.609 91.7256 306.583 93.7667 307.514 94.4112C313.959 98.2784 317.182 103.005 317.182 108.591C317.182 112.243 316.144 115.502 314.067 118.366C310.2 123.594 303.647 126.53 294.409 127.175V135.983Z" fill="black" fill-opacity="0.3"/>
+</g>
+<defs>
+<filter id="filter0_dn_20_173" x="34.7188" y="0" width="508.562" height="369.699" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
+<feFlood flood-opacity="0" result="BackgroundImageFix"/>
+<feColorMatrix in="SourceAlpha" type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 127 0" result="hardAlpha"/>
+<feOffset dy="4"/>
+<feGaussianBlur stdDeviation="2"/>
+<feComposite in2="hardAlpha" operator="out"/>
+<feColorMatrix type="matrix" values="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0.25 0"/>
+<feBlend mode="normal" in2="BackgroundImageFix" result="effect1_dropShadow_20_173"/>
+<feBlend mode="normal" in="SourceGraphic" in2="BackgroundImageFix" result="shape"/>
+<feTurbulence type="fractalNoise" baseFrequency="2 2" stitchTiles="stitch" numOctaves="3" result="noise" seed="1443" />
+<feColorMatrix in="noise" type="luminanceToAlpha" result="alphaNoise" />
+<feComponentTransfer in="alphaNoise" result="coloredNoise1">
+<feFuncA type="discrete" tableValues="0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 1 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 0 "/>
+</feComponentTransfer>
+<feComposite operator="in" in2="shape" in="coloredNoise1" result="noise1Clipped" />
+<feFlood flood-color="rgba(0, 0, 0, 0.25)" result="color1Flood" />
+<feComposite operator="in" in2="noise1Clipped" in="color1Flood" result="color1" />
+<feMerge result="effect2_noise_20_173">
+<feMergeNode in="shape" />
+<feMergeNode in="color1" />
+</feMerge>
+<feBlend mode="normal" in="effect2_noise_20_173" in2="effect1_dropShadow_20_173" result="effect2_noise_20_173"/>
+</filter>
+</defs>
+</svg>
