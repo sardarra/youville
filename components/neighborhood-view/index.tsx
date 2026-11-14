@@ -55,7 +55,7 @@ export function NeighborhoodView({ name = 'Your', company = 'Select a policy' }:
       </div>
       <div className="youville-title-overlay">
         <h1>Welcome to {name}ville</h1>
-        <p>Viewing policy for: {company}</p>
+        <p>Scroll sideways to explore</p>
       </div>
     </>
   )
