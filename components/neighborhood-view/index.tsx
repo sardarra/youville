@@ -45,14 +45,18 @@ const absolute = (top: number, left: number, width: number, height: number): CSS
 
 export function NeighborhoodView({ name = 'Your', company = 'Select a policy' }: { name?: string; company?: string }) {
   return (
-    <div className="youville-scene" style={{ background: 'linear-gradient(90deg, #b3f0ff 17%, #dddd58 55%, #ddaa58 73%, #cf4826 100%)' }}>
-      <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #007360)' }} />
-      <img alt="" src="/youville/Road.svg" style={absolute(727, 0, 5042, 69)} draggable={false} />
-      {artwork.map(({ file, label = '', top, left, width, height }) => (
-        <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={absolute(top, left, width, height)} draggable={false} />
-      ))}
-      <h1 style={{ ...absolute(15, 23, 1400, 110), margin: 0, fontFamily: 'Inter, Helvetica, sans-serif', fontSize: 77, fontWeight: 400, letterSpacing: '-5.39px', color: '#000', textShadow: '0 3px 4px #00000040' }}>Welcome to {name}ville</h1>
-      <p style={{ ...absolute(32, 1488, 1400, 80), margin: 0, fontFamily: 'Inter, Helvetica, sans-serif', fontSize: 32, letterSpacing: '-2.24px', color: '#000' }}>Viewing policy for: {company}</p>
-    </div>
+    <>
+      <div className="youville-scene" style={{ background: 'linear-gradient(90deg, #b3f0ff 17%, #dddd58 55%, #ddaa58 73%, #cf4826 100%)' }}>
+        <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #007360)' }} />
+        <img alt="" src="/youville/Road.svg" style={absolute(727, 0, 5042, 69)} draggable={false} />
+        {artwork.map(({ file, label = '', top, left, width, height }) => (
+          <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={absolute(top, left, width, height)} draggable={false} />
+        ))}
+      </div>
+      <div className="youville-title-overlay">
+        <h1>Welcome to {name}ville</h1>
+        <p>Viewing policy for: {company}</p>
+      </div>
+    </>
   )
 }
