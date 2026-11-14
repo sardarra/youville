@@ -74,12 +74,24 @@ export function isBlockedAddress(address: string): boolean {
     first < 0x2000 || first > 0x3fff
 }
 
-async function resolvePublicAddresses(hostname: string): Promise<LookupAddress[]> {
+async function resolvePublicAddresses(hostname: string, timeoutMs: number): Promise<LookupAddress[]> {
   const bareHostname = hostname.replace(/^\[|\]$/g, '')
   const family = isIP(bareHostname)
   const addresses = family
     ? [{ address: bareHostname, family: family as 4 | 6 }]
-    : await lookup(bareHostname, { all: true, verbatim: true })
+    : await new Promise<LookupAddress[]>((resolve, reject) => {
+      const timer = setTimeout(() => reject(new PolicyFetchError()), timeoutMs)
+      lookup(bareHostname, { all: true, verbatim: true }).then(
+        (result) => {
+          clearTimeout(timer)
+          resolve(result)
+        },
+        () => {
+          clearTimeout(timer)
+          reject(new PolicyFetchError())
+        },
+      )
+    })
   if (!addresses.length || addresses.some(({ address }) => isBlockedAddress(address))) throw new PolicyFetchError()
   return addresses
 }
@@ -88,9 +100,11 @@ function readResponse(url: URL, addresses: LookupAddress[], timeoutMs: number): 
   return new Promise((resolve, reject) => {
     const transport = url.protocol === 'https:' ? httpsRequest : httpRequest
     let settled = false
+    let timer: ReturnType<typeof setTimeout>
     const finishError = (error: Error) => {
       if (settled) return
       settled = true
+      clearTimeout(timer)
       reject(error instanceof PolicyFetchError ? error : new PolicyFetchError())
     }
 
@@ -103,7 +117,7 @@ function readResponse(url: URL, addresses: LookupAddress[], timeoutMs: number): 
       }
     }
 
-    const request = transport(url, { lookup: pinnedLookup, headers: { 'user-agent': 'TandC-Xray/1.0' } }, (response) => {
+    const request = transport(url, { lookup: pinnedLookup, headers: { 'user-agent': 'TandC-Xray/1.0', 'accept-encoding': 'identity' } }, (response) => {
       const chunks: Buffer[] = []
       let total = 0
       response.on('data', (chunk: Buffer | string) => {
@@ -119,12 +133,13 @@ function readResponse(url: URL, addresses: LookupAddress[], timeoutMs: number): 
       response.on('end', () => {
         if (settled) return
         settled = true
+        clearTimeout(timer)
         resolve({ response, body: Buffer.concat(chunks) })
       })
       response.on('error', finishError)
     })
 
-    request.setTimeout(timeoutMs, () => request.destroy(new Error('Request timed out')))
+    timer = setTimeout(() => request.destroy(new Error('Request timed out')), timeoutMs)
     request.on('error', finishError)
     request.end()
   })
@@ -151,11 +166,13 @@ export async function fetchPolicyUrl(input: string): Promise<{ text: string; url
   const deadline = Date.now() + TIMEOUT_MS
   for (let redirect = 0; redirect <= MAX_REDIRECTS; redirect++) {
     if (!['http:', 'https:'].includes(currentUrl.protocol) || currentUrl.username || currentUrl.password) throw new PolicyFetchError()
-    const addresses = await resolvePublicAddresses(currentUrl.hostname)
     const remaining = deadline - Date.now()
     if (remaining <= 0) throw new PolicyFetchError()
+    const addresses = await resolvePublicAddresses(currentUrl.hostname, remaining)
+    const afterDns = deadline - Date.now()
+    if (afterDns <= 0) throw new PolicyFetchError()
 
-    const { response, body } = await readResponse(currentUrl, addresses, remaining)
+    const { response, body } = await readResponse(currentUrl, addresses, afterDns)
     if (response.statusCode && response.statusCode >= 300 && response.statusCode < 400) {
       const location = response.headers.location
       if (!location || redirect === MAX_REDIRECTS) throw new PolicyFetchError()

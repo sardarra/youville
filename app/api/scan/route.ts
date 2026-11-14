@@ -9,7 +9,7 @@ export const runtime = 'nodejs'
 
 const requestSchema = z.object({
   text: z.string().optional(),
-  url: z.string().url().optional(),
+  url: z.string().url().refine((value) => ['http:', 'https:'].includes(new URL(value).protocol)).optional(),
 }).strict().refine((value) => Number(Boolean(value.text?.trim())) + Number(Boolean(value.url)) === 1, {
   message: 'Provide exactly one of text or url.',
 })
@@ -64,6 +64,11 @@ function isRateLimited(ip: string): boolean {
     for (const [key, timestamps] of requestsByIp) {
       if (!timestamps.some((timestamp) => now - timestamp < WINDOW_MS)) requestsByIp.delete(key)
     }
+    while (requestsByIp.size > 5000) {
+      const oldest = requestsByIp.keys().next().value
+      if (oldest === undefined) break
+      requestsByIp.delete(oldest)
+    }
   }
   return false
 }
@@ -76,7 +81,7 @@ function requestIp(request: NextRequest): string {
 
 async function fallbackResult(hash: string, source: ScanResponse['source']): Promise<ScanResponse | null> {
   const cached = await readCachedScan(hash)
-  return cached ? { ...cached, source, warnings: [...cached.warnings, 'Showing a saved result'] } : null
+  return cached ? { ...cached, source, warnings: [...(cached.warnings ?? []), 'Showing a saved result'] } : null
 }
 
 export async function POST(request: NextRequest) {

@@ -4,7 +4,12 @@ import { join } from 'node:path'
 import type { ScanResponse } from '@/lib/scan'
 
 export function normalizedTextHash(text: string): string {
-  const normalized = text.replace(/\r\n?/g, '\n').replace(/\s+/g, ' ').trim().toLowerCase()
+  const normalized = text
+    .replace(/\r\n?/g, '\n')
+    .split('\n')
+    .map((line) => line.replace(/[ \t]+/g, ' ').trim())
+    .join('\n')
+    .trim()
   return createHash('sha256').update(normalized).digest('hex')
 }
 

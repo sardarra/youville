@@ -1,3 +1,4 @@
+import { randomUUID } from 'node:crypto'
 import { GoogleGenAI } from '@google/genai'
 import { z } from 'zod'
 import { FIELDS, SIGNALS, type FieldLabel, type Signal } from '@/lib/taxonomy'
@@ -26,10 +27,14 @@ const findingSchema = z.object({
   field: z.enum(FIELDS.map((field) => field.label) as [FieldLabel, ...FieldLabel[]]).nullable(),
   stage: z.enum(['Data collected', 'Rights you waive', 'Who it’s shared with']),
   category: z.string().min(1),
-  summary: z.string().refine((value) => value.trim().split(/\s+/).length < 25, 'Summary must be under 25 words'),
+  summary: z.string().min(1).refine((value) => value.trim().split(/\s+/).length < 25, 'Summary must be under 25 words'),
   severity: z.union([z.literal(1), z.literal(2), z.literal(3)]),
   signals: z.array(z.enum([...SIGNALS] as [Signal, ...Signal[]])),
   quote: z.string().min(1).max(299),
+}).superRefine((finding, context) => {
+  if (finding.stage !== 'Data collected' && finding.field !== null) {
+    context.addIssue({ code: 'custom', message: 'Sharing and rights findings must use a null field.' })
+  }
 })
 
 const responseSchema = {
@@ -41,7 +46,7 @@ const responseSchema = {
         type: 'object',
         properties: {
           clauseId: { type: 'string' },
-          field: { type: 'string', enum: [...FIELDS.map((field) => field.label), null] },
+          field: { anyOf: [{ type: 'string', enum: FIELDS.map((field) => field.label) }, { type: 'null' }] },
           stage: { type: 'string', enum: ['Data collected', 'Rights you waive', 'Who it’s shared with'] },
           category: { type: 'string' },
           summary: { type: 'string' },
@@ -58,29 +63,14 @@ const responseSchema = {
 
 const responseValidator = z.object({ findings: z.array(findingSchema) })
 
-function withTimeout<T>(promise: Promise<T>, timeoutMs: number): Promise<T> {
-  return new Promise((resolve, reject) => {
-    const timer = setTimeout(() => reject(new Error('Gemini request timed out')), timeoutMs)
-    promise.then(
-      (value) => {
-        clearTimeout(timer)
-        resolve(value)
-      },
-      (error: unknown) => {
-        clearTimeout(timer)
-        reject(error)
-      },
-    )
-  })
-}
-
 export class GeminiExtractor implements Extractor {
   readonly warnings: string[] = []
   private readonly client: GoogleGenAI
   private readonly model: string
 
-  constructor(apiKey = process.env.GEMINI_API_KEY, model = process.env.GEMINI_MODEL ?? 'gemini-2.5-flash') {
+  constructor(apiKey = process.env.GEMINI_API_KEY, model = process.env.GEMINI_MODEL) {
     if (!apiKey) throw new Error('GEMINI_API_KEY is not configured')
+    if (!model) throw new Error('GEMINI_MODEL is not configured')
     this.client = new GoogleGenAI({ apiKey })
     this.model = model
   }
@@ -106,19 +96,18 @@ export class GeminiExtractor implements Extractor {
 
   private async extractChunk(clauses: Clause[]): Promise<RawFinding[] | null> {
     const clauseText = clauses.map((clause) => `[CLAUSE ${clause.id}]\n${clause.text}`).join('\n\n')
-    const input = `${EXTRACTION_SYSTEM_PROMPT}\n\nExtract findings from only the document text inside these delimiters. Return an empty findings array if none apply.\n\n<document>\n${clauseText}\n</document>`
+    const delimiter = `POLICY_DOCUMENT_${randomUUID()}`
+    const input = `Extract findings from only the document text between the delimiters ${delimiter}_BEGIN and ${delimiter}_END. Return an empty findings array if none apply.\n\n${delimiter}_BEGIN\n${clauseText}\n${delimiter}_END`
 
     for (let attempt = 0; attempt < 2; attempt++) {
       let response
       try {
-        response = await withTimeout(
-          this.client.interactions.create({
-            model: this.model,
-            input,
-            response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema },
-          }),
-          20_000,
-        )
+        response = await this.client.interactions.create({
+          model: this.model,
+          system_instruction: EXTRACTION_SYSTEM_PROMPT,
+          input,
+          response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema },
+        }, { timeout_ms: 20_000, retries: { strategy: 'none' } })
       } catch {
         return null
       }

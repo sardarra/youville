@@ -35,6 +35,7 @@ const quoteMatches = (quote: string, text: string) => {
   const normalizedQuote = normalize(quote)
   const normalizedText = normalize(text)
   if (normalizedQuote && normalizedText.includes(normalizedQuote)) return true
+  if (normalizedQuote.split(/\s+/).length < 5) return false
   return tokenOverlap(normalizedQuote, normalizedText) >= 0.9
 }
 
