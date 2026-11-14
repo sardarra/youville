@@ -1,0 +1,29 @@
+{
+  "pbtResults": {},
+  "executionHistory": {
+    "1. Set up scan module types and schemas": [
+      {
+        "executionId": "b0d97d11-011c-4d1a-92bc-934f47280ff2",
+        "chatSessionId": "sess_1746e061-72bf-4b34-ba32-0a996b38dbae",
+        "timestamp": 1794636861950
+      },
+      {
+        "executionId": "b0d97d11-011c-4d1a-92bc-934f47280ff2",
+        "chatSessionId": "sess_1746e061-72bf-4b34-ba32-0a996b38dbae",
+        "timestamp": 1794637479536
+      }
+    ],
+    "1.1 [P0] Create core domain types and Zod schemas in `lib/scan/types.ts` and `lib/scan/schemas.ts`": [
+      {
+        "executionId": "b0d97d11-011c-4d1a-92bc-934f47280ff2",
+        "chatSessionId": "sess_1746e061-72bf-4b34-ba32-0a996b38dbae",
+        "timestamp": 1794636878535
+      },
+      {
+        "executionId": "b0d97d11-011c-4d1a-92bc-934f47280ff2",
+        "chatSessionId": "sess_1746e061-72bf-4b34-ba32-0a996b38dbae",
+        "timestamp": 1794637479500
+      }
+    ]
+  }
+}
