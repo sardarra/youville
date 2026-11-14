@@ -30,7 +30,7 @@ export function ExposureGuide({ onBack }: { onBack: () => void }) {
           <span className="not-real-label"><CircleHelp size={14} /> Fictional map · not a real address</span>
         </div>
         <div className="neighborhood-map">
-          <svg viewBox="0 0 920 470" role="img" aria-labelledby="map-title map-desc">
+          <svg viewBox="0 0 920 470" preserveAspectRatio="none" role="img" aria-labelledby="map-title map-desc">
             <title id="map-title">Fictional map of Sardarville</title>
             <desc id="map-desc">A conceptual town illustration. Verified ledger evidence determines whether possible home and school locations are highlighted.</desc>
             <rect width="920" height="470" fill="#f3f1e9" />
