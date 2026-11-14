@@ -1,9 +1,9 @@
-export type Finding = { id: string; category: string; field: string; summary: string; quote: string; clauseId: string; severity: 1 | 2 | 3; verified: boolean; stage: string }
+export type Finding = { id: string; category: string; field: string; summary: string; quote: string; clauseId: string; severity: 1 | 2 | 3; verified: boolean; stage: string; signals?: string[]; removedReason?: string }
 export type Clause = { id: string; text: string }
 export type Sample = { id: string; name: string; type: string; color: string; initials: string; clauses: Clause[]; findings: Finding[] }
 
 const clauses = (items: string[]): Clause[] => items.map((text, i) => ({ id: `${Math.floor(i / 3) + 1}.${(i % 3) + 1}`, text }))
-const findings = (items: Array<[string,string,string,string,1|2|3,string,boolean,string]>): Finding[] => items.map(([id,category,field,summary, severity,clauseId,verified,stage]) => ({ id, category, field, summary, severity, clauseId, verified, stage, quote: `We may collect ${field.toLowerCase()} to provide, personalize, and improve our services.` }))
+const findings = (items: Array<[string,string,string,string,'1'|'2'|'3',string,boolean,string]>): Finding[] => items.map(([id,category,field,summary, severity,clauseId,verified,stage]) => ({ id, category, field, summary, severity: Number(severity) as 1|2|3, clauseId, verified, stage, quote: `We may collect ${field.toLowerCase()} to provide, personalize, and improve our services.` }))
 
 export const samples: Sample[] = [
  { id:'social', name:'Example Social', type:'Social network', color:'#6d7562', initials:'ES', clauses:clauses([
