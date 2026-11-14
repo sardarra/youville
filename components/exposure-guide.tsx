@@ -1,19 +1,13 @@
 'use client'
 
 import { Check, CircleHelp, Home, School } from 'lucide-react'
-import { inferenceRules } from '@/data/rules'
-import { samples } from '@/data/mock-data'
+import type { Inference } from '@/lib/rules'
 
-export function ExposureGuide({ onBack }: { onBack: () => void }) {
-  const verified = samples.flatMap((app) => app.findings.filter((finding) => finding.verified))
-  const fields = new Set(verified.map((finding) => finding.field.toLowerCase()))
-  const hasLocation = fields.has('precise location')
-  const hasTimestamps = fields.has('timestamps') || verified.some((finding) => /timestamp/i.test(finding.summary))
-  const hasEduEmail = fields.has('email ending in .edu')
-  const homeCouldBeInferred = hasLocation && hasTimestamps
-  const schoolCouldBeInferred = hasLocation && hasEduEmail
-  const homeRule = inferenceRules.find((rule) => rule.id === 'R1')
-  const schoolRule = inferenceRules.find((rule) => rule.id === 'R3')
+export function ExposureGuide({ onBack, inferences }: { onBack: () => void; inferences: Inference[] }) {
+  const homeInference = inferences.find((inference) => inference.output === 'Home address and street')
+  const schoolInference = inferences.find((inference) => inference.output === 'School')
+  const homeCouldBeInferred = Boolean(homeInference)
+  const schoolCouldBeInferred = Boolean(schoolInference)
 
   return (
     <main className="visual-guide-page">
@@ -58,8 +52,8 @@ export function ExposureGuide({ onBack }: { onBack: () => void }) {
         <div className="neighborhood-legend"><span><i className="legend-pin" /> Potential place inferred</span><span><i className="legend-street" /> Street label is illustrative</span><span className="map-disclaimer">No real addresses or map data</span></div>
       </section>
       <section className="guide-evidence-grid" aria-label="Inference evidence">
-        <EvidenceCard title="Home and street" enabled={homeCouldBeInferred} inputs="Precise location + timestamps" explanation={homeRule?.explanation ?? 'Location and timestamps could suggest a home area.'} />
-        <EvidenceCard title="School" enabled={schoolCouldBeInferred} inputs="Precise location + .edu email" explanation={schoolRule?.explanation ?? 'Location and a school-domain email could point to a school.'} />
+        <EvidenceCard title="Home and street" enabled={homeCouldBeInferred} inputs="Precise location + timestamps" explanation={homeInference?.explanation ?? 'Location and timestamps could suggest a home area.'} />
+        <EvidenceCard title="School" enabled={schoolCouldBeInferred} inputs="Precise location + .edu email" explanation={schoolInference?.explanation ?? 'Location and a school-domain email could point to a school.'} />
       </section>
       <p className="guide-note"><Check size={14} /> These are possibilities, not confirmed places. The map is an illustration generated from the ledger&apos;s verified signals.</p>
     </main>
