@@ -37,7 +37,7 @@ async function readBoundedJson(request: NextRequest): Promise<unknown> {
     total += value.byteLength
     if (total > MAX_BODY_BYTES) {
       await reader.cancel()
-      throw new RangeError('Body is too large')
+      throw new RangeError('Body is too large') 
     }
     chunks.push(value)
   }
