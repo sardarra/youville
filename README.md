@@ -4,7 +4,7 @@ Scan a company's privacy policy or terms by pasting text or providing a public H
 
 ## Setup
 
-Copy `.env.example` to `.env.local`, then set `GEMINI_API_KEY`. `GEMINI_MODEL` defaults in the example to a Flash-tier model and can be changed without editing source code.
+Create `.env.local` and set `GEMINI_API_KEY` and `GEMINI_MODEL` there. Choose a fast Flash-tier model supported by the Google Gen AI SDK; the model ID is read from the environment rather than embedded in the source.
 
 ```sh
 pnpm install

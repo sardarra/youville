@@ -140,6 +140,10 @@ export async function POST(request: NextRequest) {
       const cached = await fallbackResult(hash, source)
       if (cached) return NextResponse.json(cached)
     }
+    const totalChunks = Math.ceil(result.clauses.length / 10)
+    if (totalChunks > 0 && extractor.warnings.length >= totalChunks) {
+      return errorResponse(502, 'EXTRACTION_UNAVAILABLE', `The policy could not be analyzed. ${extractor.warnings[0]}`)
+    }
     return NextResponse.json(result)
   } catch {
     try {

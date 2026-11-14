@@ -63,6 +63,27 @@ const responseSchema = {
 
 const responseValidator = z.object({ findings: z.array(findingSchema) })
 
+type ChunkResult =
+  | { findings: RawFinding[] }
+  | { error: string }
+
+function providerErrorMessage(error: unknown): string {
+  if (error instanceof Error && /timeout/i.test(error.name)) return 'Gemini request timed out'
+  if (error instanceof Error && 'status' in error && typeof error.status === 'number') {
+    if (error.status === 429) return 'Gemini is rate limited (HTTP 429)'
+    if (error.status >= 500) return `Gemini is temporarily unavailable (HTTP ${error.status})`
+    return `Gemini request failed (HTTP ${error.status})`
+  }
+  return 'Gemini request failed'
+}
+
+function isRetryableProviderError(error: unknown): boolean {
+  if (!(error instanceof Error)) return false
+  if (/timeout/i.test(error.name)) return true
+  return 'status' in error && typeof error.status === 'number'
+    && (error.status === 429 || error.status >= 500)
+}
+
 export class GeminiExtractor implements Extractor {
   readonly warnings: string[] = []
   private readonly client: GoogleGenAI
@@ -85,8 +106,8 @@ export class GeminiExtractor implements Extractor {
       while (nextChunk < chunks.length) {
         const chunkIndex = nextChunk++
         const result = await this.extractChunk(chunks[chunkIndex])
-        if (result) findings.push(...result)
-        else this.warnings.push(`Skipped clause chunk ${chunkIndex + 1} after extraction failed.`)
+        if ('findings' in result) findings.push(...result.findings)
+        else this.warnings.push(`Skipped clause chunk ${chunkIndex + 1}: ${result.error}.`)
       }
     }
 
@@ -94,7 +115,7 @@ export class GeminiExtractor implements Extractor {
     return findings
   }
 
-  private async extractChunk(clauses: Clause[]): Promise<RawFinding[] | null> {
+  private async extractChunk(clauses: Clause[]): Promise<ChunkResult> {
     const clauseText = clauses.map((clause) => `[CLAUSE ${clause.id}]\n${clause.text}`).join('\n\n')
     const delimiter = `POLICY_DOCUMENT_${randomUUID()}`
     const input = `Extract findings from only the document text between the delimiters ${delimiter}_BEGIN and ${delimiter}_END. Return an empty findings array if none apply.\n\n${delimiter}_BEGIN\n${clauseText}\n${delimiter}_END`
@@ -108,18 +129,22 @@ export class GeminiExtractor implements Extractor {
           input,
           response_format: { type: 'text', mime_type: 'application/json', schema: responseSchema },
         }, { timeout_ms: 20_000, retries: { strategy: 'none' } })
-      } catch {
-        return null
+      } catch (error) {
+        if (attempt === 0 && isRetryableProviderError(error)) {
+          await new Promise((resolve) => setTimeout(resolve, 250))
+          continue
+        }
+        return { error: providerErrorMessage(error) }
       }
 
       try {
         const parsed = responseValidator.parse(JSON.parse(response.output_text ?? ''))
-        return parsed.findings
+        return { findings: parsed.findings }
       } catch {
-        if (attempt === 1) return null
+        if (attempt === 1) return { error: 'Gemini returned invalid structured data' }
       }
     }
-    return null
+    return { error: 'Gemini request failed' }
   }
 }
 

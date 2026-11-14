@@ -145,7 +145,7 @@ function readResponse(url: URL, addresses: LookupAddress[], timeoutMs: number): 
   })
 }
 
-function htmlToText(html: string): string {
+export function htmlToText(html: string): string {
   const $ = cheerio.load(html)
   $('script, style, nav, footer, header, noscript, svg, iframe').remove()
   const blocks = $('h1, h2, h3, h4, h5, h6, p, li')
