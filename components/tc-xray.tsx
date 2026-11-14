@@ -204,7 +204,11 @@ export function TcXray() {
     ) ?? []
 
   return (
-    <div className="app-shell">
+    <div
+      className={`app-shell ${
+        view === 'ledger' ? 'app-shell-neighborhood' : ''
+      }`}
+    >
       <SiteHeader view={view} onChangeView={setView} />
 
       {view === 'scan' && (

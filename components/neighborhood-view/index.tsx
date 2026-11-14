@@ -46,8 +46,8 @@ const absolute = (top: number, left: number, width: number, height: number): CSS
 export function NeighborhoodView({ name = 'Your', company = 'Select a policy' }: { name?: string; company?: string }) {
   return (
     <>
-      <div className="youville-scene" style={{ background: 'linear-gradient(90deg, #b3f0ff 17%, #dddd58 55%, #ddaa58 73%, #cf4826 100%)' }}>
-        <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #007360)' }} />
+      <div className="youville-scene" style={{ background: '#b3f0ff' }}>
+        <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #00af0f)' }} />
         <img alt="" src="/youville/Road.svg" style={absolute(727, 0, 5042, 69)} draggable={false} />
         {artwork.map(({ file, label = '', top, left, width, height }) => (
           <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={absolute(top, left, width, height)} draggable={false} />
