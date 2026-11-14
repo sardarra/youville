@@ -35,12 +35,15 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN a POST request with a JSON body containing a non-empty `text` field is received, THE Scan_API SHALL return a Scan_Result containing clauses, findings, inferences, stats, exposureScore, and warnings.
-2. WHEN a POST request with an empty or missing `text` field and no `url` field is received, THE Scan_API SHALL return an HTTP 400 status with a descriptive error message.
-3. THE Scan_API SHALL return source metadata containing the source name (or hostname for URL mode), the total character count, the clause count, and the scan timestamp.
+1. WHEN a POST request with a JSON body containing a `text` field whose trimmed length is between 1 and 100,000 characters is received, THE Scan_API SHALL return a Scan_Result containing clauses, findings, inferences, stats, exposureScore, and warnings, where clauses, findings, inferences, and warnings are arrays that may be empty.
+2. IF a POST request provides a `text` field that is missing, empty, or whitespace-only with no `url` field, or a `text` field exceeding 100,000 characters, THEN THE Scan_API SHALL return an HTTP 400 status with an error message indicating the rejected input, without performing a scan.
+3. WHEN a scan completes successfully, THE Scan_API SHALL return source metadata containing the source name (or hostname for URL mode), the total character count of the submitted text, the clause count, and a scan timestamp formatted as an ISO 8601 UTC string.
 4. THE Scan_API SHALL process each scan request in memory only, releasing all document text after the response is returned.
-5. WHEN the Scan_API completes processing, THE Scan_API SHALL return stats containing total, verified, and removed finding counts computed from the actual findings array.
-6. THE Scan_API SHALL return Findings, Clauses, and Inferences in a JSON structure compatible with the existing Front_End TypeScript types (Finding, Clause, and extended types for Inferences and Scan_Result).
+5. WHEN a scan completes successfully, THE Scan_API SHALL return stats containing total, verified, and removed finding counts, where total equals the number of findings, verified equals the number of findings marked as verified, and removed equals the number of findings not marked as verified.
+6. THE Scan_API SHALL return findings, clauses, and inferences in a JSON structure matching the existing Front_End TypeScript types, where findings match the Finding type, clauses match the Clause type, and inferences match the existing InferenceRule type.
+7. WHEN a scan completes successfully, THE Scan_API SHALL return an exposureScore that is an integer from 0 to 100 equal to the number of verified findings multiplied by 8, capped at 100.
+8. IF a scan produces fewer than 2 clauses, THEN THE Scan_API SHALL include at least one warning in the warnings array indicating that the policy may be too short to analyze.
+9. WHEN a scan completes successfully, THE Scan_API SHALL return inferences consisting of each inference rule whose inputs are all present among the fields of the verified findings.
 
 ### Requirement 2: Policy Text Segmentation
 
@@ -48,11 +51,12 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN raw policy text is provided to the Segmenter, THE Segmenter SHALL split the text into Clauses using deterministic sentence and paragraph boundaries.
+1. WHEN raw policy text is provided to the Segmenter, THE Segmenter SHALL split the text into Clauses only at deterministic sentence and paragraph boundaries, where a sentence boundary is a period, question mark, or exclamation mark followed by whitespace, a paragraph boundary is one or more consecutive line-break characters, and the boundary characters and any following whitespace are assigned to the preceding Clause.
 2. THE Segmenter SHALL assign each Clause a stable ID in the format `segment-<index>` where index is a zero-based sequential integer.
 3. WHEN the same policy text is segmented twice, THE Segmenter SHALL produce identical Clause IDs and identical Clause text for both runs.
 4. THE Segmenter SHALL preserve the original text of each Clause verbatim, including internal whitespace, so that the Verifier can match quotes exactly.
-5. WHEN policy text contains fewer than 3 characters, THE Segmenter SHALL produce a single Clause containing the entire text.
+5. IF policy text contains fewer than 3 characters, THEN the Segmenter SHALL produce a single Clause containing the entire text.
+6. IF no policy text is provided, THEN the Segmenter SHALL produce zero Clauses and indicate that no policy text was provided.
 
 ### Requirement 3: Gemini Extraction
 
@@ -61,7 +65,7 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 #### Acceptance Criteria
 
 1. WHEN a chunk of Clauses is sent to the Gemini_Client, THE Gemini_Client SHALL call the Gemini API using the `@google/genai` SDK with structured output configured via a JSON schema and MIME type `application/json`.
-2. THE Gemini_Client SHALL use the model identifier from the `GEMINI_MODEL` environment variable, defaulting to a Flash-tier model when the variable is unset.
+2. THE Gemini_Client SHALL use the model identifier from the `GEMINI_MODEL` environment variable for Gemini API calls.
 3. WHEN Gemini_Client returns a response, THE Gemini_Client SHALL validate the response against a Zod schema and return parsed Findings.
 4. IF the Zod validation fails on the first attempt, THE Gemini_Client SHALL retry the call once with the same chunk.
 5. IF the Zod validation fails on the retry, THE Gemini_Client SHALL drop that chunk's findings and add a Warning to the Scan_Result.
@@ -70,8 +74,10 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 8. THE Gemini_Client SHALL send policy text as delimited untrusted input with explicit instructions to ignore any commands embedded in the text.
 9. THE Gemini_Client SHALL extract only data-collection findings, returning category, field, summary, severity, signals, clauseId, and verbatim quote for each Finding.
 10. Inference SHALL be performed exclusively by the Rules_Engine; THE Gemini_Client SHALL extract only data-collection findings and SHALL produce zero Inferences.
-11. WHEN a typical policy of 3,000–8,000 characters is processed, THE Scan_API SHALL complete within 15 seconds under normal Gemini API latency.
+11. WHEN a policy of 3,000–8,000 characters is processed, IF the Gemini API responds within 5 seconds per call, THEN THE Scan_API SHALL complete within 15 seconds.
 12. THE Gemini_Client SHALL expose a swappable interface so that unit tests and the Demo_Cache fallback can substitute an alternative implementation without changing the Scan_API code.
+13. IF the `GEMINI_MODEL` environment variable is unset, THEN THE Gemini_Client SHALL use a default Flash-tier model identifier.
+14. IF a Gemini API call fails with a non-timeout error, THEN THE Gemini_Client SHALL drop that chunk's findings and add a Warning to the Scan_Result.
 
 ### Requirement 4: Finding Verification
 
@@ -79,14 +85,15 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN a Finding's quote is an exact substring of the Finding's claimed Clause text after whitespace normalization, THE Verifier SHALL mark the Finding as verified.
-2. WHEN a Finding's quote does not match the claimed Clause by exact substring but matches another Clause by exact substring, THE Verifier SHALL correct the Finding's clauseId to the matching Clause and mark the Finding as verified.
-3. WHEN a Finding's quote matches no Clause by exact substring, THE Verifier SHALL attempt a bounded fuzzy match with a similarity threshold of 0.85 against each Clause.
-4. IF the fuzzy match succeeds against a Clause other than the claimed Clause, THE Verifier SHALL correct the clauseId and mark the Finding as verified.
-5. IF the fuzzy match fails against all Clauses, THE Verifier SHALL mark the Finding as not verified with a removed reason of `quote_not_found`.
-6. WHEN a Finding is marked as not verified, THE Verifier SHALL attach a removed reason describing why the Finding was excluded.
-7. THE Verifier SHALL exclude non-verified Findings from the set of inputs available to the Rules_Engine.
-8. THE Verifier SHALL normalize whitespace, case, and punctuation before comparing the quote to the Clause text.
+1. WHEN a Finding's quote is an exact substring of the Finding's claimed Clause text after normalization, THE Verifier SHALL mark the Finding as verified.
+2. WHEN a Finding's quote does not match the claimed Clause by exact substring but matches one or more other Clauses by exact substring, THE Verifier SHALL correct the Finding's clauseId to the matching Clause appearing earliest in document order and mark the Finding as verified.
+3. WHEN a Finding's quote matches no Clause by exact substring, THE Verifier SHALL attempt a bounded fuzzy match with a similarity threshold of 0.85 against each Clause and identify the best-matching Clause as the Clause with the highest similarity score, breaking ties in favor of the claimed Clause and then by earliest document order.
+4. IF the best-matching Clause identified by the fuzzy match is the claimed Clause and has a similarity score at or above 0.85, THEN THE Verifier SHALL mark the Finding as verified.
+5. IF the best-matching Clause identified by the fuzzy match is a Clause other than the claimed Clause and has a similarity score at or above 0.85, THEN THE Verifier SHALL correct the clauseId to the best-matching Clause and mark the Finding as verified.
+6. IF the fuzzy match yields no Clause with a similarity score at or above 0.85, THEN THE Verifier SHALL mark the Finding as not verified with a removed reason of `quote_not_found`.
+7. WHEN a Finding is marked as not verified, THE Verifier SHALL attach a removed reason describing why the Finding was excluded.
+8. THE Verifier SHALL exclude non-verified Findings from the set of inputs available to the Rules_Engine.
+9. THE Verifier SHALL normalize whitespace, case, and punctuation before comparing the quote to the Clause text.
 
 ### Requirement 5: Inference Rules Engine
 
@@ -95,12 +102,12 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 #### Acceptance Criteria
 
 1. THE Rules_Engine SHALL load the 10 inference rules (R1–R10) defined in the rules configuration, each with inputs, an output label, and an explanation.
-2. WHEN every input label of a rule is present in the set of verified Findings' signals, THE Rules_Engine SHALL fire that rule and produce an Inference.
+2. WHEN every input label of a rule is present in the set of verified Findings' signals, THE Rules_Engine SHALL fire that rule and produce an Inference. For this purpose, an input label that lists alternatives joined by 'or' counts as present if at least one of those alternatives is present among the verified Findings' signals.
 3. WHEN one or more input labels of a rule are missing from the verified Findings, THE Rules_Engine SHALL skip that rule.
-4. THE Rules_Engine SHALL produce each Inference with the rule id, the output label, the supporting finding ids, and the explanation from the rule definition.
+4. THE Rules_Engine SHALL produce each Inference with the rule id, the output label, the supporting finding ids, and the explanation from the rule definition. The supporting finding ids are the ids of the verified Findings whose signals match that rule's input labels.
 5. THE Rules_Engine SHALL phrase every Inference explanation using the word `could` and SHALL omit the word `will` from all explanation text.
-6. WHEN the same set of verified Findings is processed twice, THE Rules_Engine SHALL produce identical Inferences.
-7. THE Gemini_Client SHALL tag every Finding with signals drawn from the same fixed vocabulary that the Rules_Engine uses as input labels.
+6. WHEN the same set of verified Findings is processed twice, THE Rules_Engine SHALL produce identical Inferences. Identical means the same number of Inferences, each with matching rule id, output label, supporting finding ids, and explanation.
+7. THE Gemini_Client SHALL tag every Finding with signals drawn only from the fixed vocabulary consisting of all input labels used by the loaded inference rules.
 
 ### Requirement 6: Exposure Scoring
 
@@ -108,8 +115,8 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. THE Scan_API SHALL compute an Exposure_Score in the range 0–100 from the verified Findings using a deterministic severity-weighted formula.
-2. WHEN all verified Findings have severity 1, THE Exposure_Score SHALL be lower than when the same number of verified Findings all have severity 3.
+1. THE Scan_API SHALL compute an Exposure_Score as an integer in the range 0–100 from the verified Findings using a deterministic severity-weighted formula, where each Finding's severity is an integer from 1 (lowest) to 3 (highest).
+2. WHEN one or more verified Findings all have severity 1, THE Exposure_Score SHALL be lower than when the same number of verified Findings all have severity 3.
 3. WHEN no Findings are verified, THE Exposure_Score SHALL be 0.
 4. WHEN all 12 profile fields are verified at severity 3, THE Exposure_Score SHALL not exceed 100.
 5. WHEN the same set of verified Findings is scored twice, THE Scan_API SHALL produce identical Exposure_Scores.
@@ -121,8 +128,9 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 #### Acceptance Criteria
 
 1. WHEN the `text` field exceeds 60,000 characters, THE Scan_API SHALL reject the request with HTTP 413 and a message indicating the character limit.
-2. WHEN more than 10 scan requests are received from the same IP address within 60 seconds, THE Scan_API SHALL reject subsequent requests with HTTP 429.
-3. WHEN a `url` field is present but does not parse as a valid `http` or `https` URL, THE Scan_API SHALL reject the request with HTTP 400.
+2. WHEN more than 10 scan requests are received from the same IP address within any 60-second window, THE Scan_API SHALL reject subsequent requests from that IP address with HTTP 429.
+3. WHEN a `url` field is present but does not parse as a valid `http` or `https` URL with a non-empty host, THE Scan_API SHALL reject the request with HTTP 400.
+4. WHILE the number of scan requests received from an IP address within the preceding 60 seconds is 10 or fewer, THE Scan_API SHALL accept scan requests from that IP address.
 
 ### Requirement 8: Demo Cache Fallback
 
@@ -130,10 +138,10 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. THE Demo_Cache SHALL contain 8–10 pre-scanned real policy results stored as JSON files, each keyed by a SHA-256 hash of the original input text.
-2. WHEN the Gemini_Client fails or times out for all chunks, THE Scan_API SHALL compute a SHA-256 hash of the input text and check the Demo_Cache for a match.
-3. IF the input hash matches a Demo_Cache entry, THE Scan_API SHALL return the cached Scan_Result with a Warning indicating the cached fallback was used.
-4. IF the input hash does not match any Demo_Cache entry and Gemini_Client has failed, THE Scan_API SHALL return an HTTP 503 with a message advising the user to try again or paste text directly.
+1. THE Demo_Cache SHALL contain 8–10 pre-scanned real policy results stored as JSON files, each a valid Scan_Result keyed by a SHA-256 hash of the original input text used to produce it.
+2. WHEN the Gemini_Client fails or times out for all chunks, THE Scan_API SHALL compute a SHA-256 hash of the input text and look up that hash as a key in the Demo_Cache.
+3. IF the computed hash matches a Demo_Cache key, THE Scan_API SHALL return the cached Scan_Result unchanged except for a Warning indicating the cached fallback was used.
+4. IF the computed hash matches no Demo_Cache key and all chunks have failed or timed out, THE Scan_API SHALL return an HTTP 503 with a message advising the user to try again or paste text directly.
 
 ### Requirement 9: URL Mode
 
@@ -142,13 +150,14 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 #### Acceptance Criteria
 
 1. WHEN a POST request with a valid `url` field and no `text` field is received, THE Scan_API SHALL fetch the URL content server-side using the SSRF_Guard.
-2. THE SSRF_Guard SHALL reject URLs whose scheme is other than `http` or `https`.
-3. THE SSRF_Guard SHALL reject URLs whose resolved IP address falls in a private range (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) or a loopback address (127.0.0.0/8, ::1).
-4. THE SSRF_Guard SHALL follow at most 3 HTTP redirects and SHALL reject any redirect to a disallowed origin.
+2. IF the URL scheme is other than `http` or `https`, THEN THE SSRF_Guard SHALL abort the fetch.
+3. IF the resolved IP address of the URL falls in a private range (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) or a loopback address (127.0.0.0/8, ::1), THEN THE SSRF_Guard SHALL abort the fetch.
+4. IF the number of HTTP redirects exceeds 3, or an HTTP redirect target's scheme is other than `http` or `https`, or a redirect target's resolved IP address falls in a private range (10.0.0.0/8, 172.16.0.0/12, 192.168.0.0/16) or a loopback address (127.0.0.0/8, ::1), THEN THE SSRF_Guard SHALL abort the fetch.
 5. WHEN the URL fetch exceeds 10 seconds, THE SSRF_Guard SHALL abort the fetch.
 6. WHEN the fetched content exceeds 2 megabytes, THE SSRF_Guard SHALL abort the fetch.
 7. WHEN the SSRF_Guard successfully fetches HTML content, THE Scan_API SHALL extract visible text from the HTML by removing script tags, style tags, and HTML markup.
-8. IF the URL fetch fails for any reason, THE Scan_API SHALL return an HTTP 502 with a message advising the user to paste the policy text directly.
+8. IF the URL fetch fails or is aborted for any reason, or the extracted text is empty, THEN THE Scan_API SHALL return an HTTP 502 with a message advising the user to paste the policy text directly.
+9. IF the fetched content type is not HTML, THEN THE SSRF_Guard SHALL abort the fetch.
 
 ### Requirement 10: Security and Logging
 
@@ -156,10 +165,11 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. THE Scan_API SHALL process each scan request in memory only, releasing all document text after the response is returned.
-2. THE Scan_API SHALL log only scan metadata — timestamp, input character count, clause count, finding count, and warnings — and SHALL omit document text, finding quotes, and clause text from all log messages.
-3. THE Gemini_Client SHALL read its API key from the `GEMINI_API_KEY` environment variable and SHALL keep the key server-side only.
-4. THE Front_End SHALL keep stored Scan_Results in the browser only and SHALL keep the Exposure Ledger in localStorage without transmitting it to any server.
+1. THE Scan_API SHALL process each scan request entirely in memory and SHALL persist no submitted document text, Clause text, or intermediate Finding data to disk, a database, a cache, or a session store.
+2. WHEN the response for a scan request has been returned, THE Scan_API SHALL retain no document text, Clause text, or intermediate data from that request beyond the request's lifetime, such that none of it is accessible to a subsequent request.
+3. THE Scan_API SHALL log only scan metadata, consisting of timestamp, input character count, clause count, finding count, and warnings, and SHALL omit submitted document text, Finding quotes, Clause text, and the Gemini API key from all log messages at every log level.
+4. THE Gemini_Client SHALL read its API key from the `GEMINI_API_KEY` environment variable and SHALL never transmit the key to the Front_End or include it in any client-rendered data.
+5. THE Front_End SHALL keep stored Scan_Results and the Ledger in the browser only, SHALL persist the Ledger in localStorage, and SHALL not transmit stored Scan_Results or Ledger data to any server.
 
 ### Requirement 11: Front-End Integration
 
@@ -167,12 +177,13 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN the user clicks "Scan terms" with pasted text, THE Front_End SHALL send a POST request to `/api/scan` with the `text` field and render the returned Scan_Result.
+1. WHEN the user clicks "Scan terms" with non-empty pasted text, THE Front_End SHALL send a POST request to `/api/scan` with the `text` field and render the clauses, findings, inferences, exposureScore, and stats returned in the Scan_Result.
 2. WHEN the Scan_Result is received, THE Front_End SHALL compute the "X of Y findings verified" display from `stats.verified` and `stats.total`.
 3. WHEN the Scan_Result is received, THE Front_End SHALL display the `exposureScore` returned by the Scan_API instead of a hardcoded value.
-4. THE Front_End SHALL render each Finding's quote as the verbatim span returned by the Scan_API.
-5. THE Front_End SHALL render Clauses using the IDs returned by the Scan_API.
-6. THE Front_End SHALL render Inferences with their rule id, output label, and explanation from the Scan_API response.
+4. WHEN the Front_End renders Findings from a Scan_Result, THE Front_End SHALL render each Finding's quote as the verbatim text returned by the Scan_API.
+5. WHEN the Front_End renders Clauses from a Scan_Result, THE Front_End SHALL display each Clause using the ID returned by the Scan_API rather than a locally generated ID.
+6. WHEN the Front_End renders Inferences from a Scan_Result, THE Front_End SHALL display each Inference with its rule id, output label, and explanation from the Scan_API response.
+7. IF the POST request to `/api/scan` fails or does not return a response within 30 seconds, THEN THE Front_End SHALL display an error message indicating the scan could not be completed and SHALL retain the user's pasted text for retry.
 
 ### Requirement 12: Client-Side Exposure Ledger
 
@@ -180,10 +191,11 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN a Scan_Result is received, THE Front_End SHALL store the result in localStorage keyed by the source name.
-2. THE Front_End SHALL merge all stored Scan_Results to display the Exposure Ledger table and combined inferences.
-3. WHEN the user clears browser storage, THE Front_End SHALL remove all stored Scan_Results.
-4. WHEN multiple Scan_Results share a verified field, THE Front_End SHALL display the combined set of apps that expose that field.
+1. WHEN a Scan_Result is received, THE Front_End SHALL store the result in localStorage keyed by the source name, overwriting any previously stored Scan_Result with the same source name.
+2. WHEN the user opens the Exposure Ledger, THE Front_End SHALL merge all stored Scan_Results into a combined set of verified Findings to display the Exposure Ledger table and the inferences derived from that combined set.
+3. WHEN the user clears the Exposure Ledger, THE Front_End SHALL remove all stored Scan_Results from localStorage.
+4. WHEN two or more stored Scan_Results each contain a verified Finding with the same field value, THE Front_End SHALL display the source names of all Scan_Results containing that verified field in the Exposure Ledger table.
+5. IF storing a Scan_Result in localStorage fails because the storage quota is exceeded, THE Front_End SHALL remove the oldest stored Scan_Result and retry the store operation.
 
 ### Requirement 13: Evaluation Harness
 
@@ -191,9 +203,11 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. THE Eval_Harness SHALL accept 5 or more Golden_Documents, each with expected findings, and run the Scan_API against each.
-2. WHEN the Eval_Harness completes, THE Eval_Harness SHALL report the verified rate (verified findings divided by total expected findings), the removed rate (removed findings divided by total extracted findings), and which rules fired for each Golden_Document.
-3. THE Eval_Harness SHALL output a summary table suitable for manual review.
+1. THE Eval_Harness SHALL accept 5 or more Golden_Documents, each providing its policy text and expected findings, and SHALL run the Scan_API against each Golden_Document's policy text.
+2. WHEN the Eval_Harness completes processing all Golden_Documents, THE Eval_Harness SHALL report, for each successfully processed Golden_Document, the verified rate as a percentage in the range 0–100 equal to the Scan_Result's verified count divided by the Golden_Document's expected finding count, the removed rate as a percentage in the range 0–100 equal to the Scan_Result's removed count divided by the Scan_Result's total count, and the set of rule ids of the Inferences produced for that Golden_Document.
+3. THE Eval_Harness SHALL output a summary table containing one row per Golden_Document and one aggregate row summarizing the successfully processed documents, where each per-document row shows the verified rate, the removed rate, and the rules fired for that Golden_Document.
+4. IF a Scan_API call for a Golden_Document returns an error or fails to produce a Scan_Result, THEN THE Eval_Harness SHALL mark that Golden_Document as failed in the summary table and SHALL exclude it from the verified rate and removed rate calculations.
+5. IF the expected finding count or the Scan_Result's total count for a Golden_Document is zero, THEN THE Eval_Harness SHALL report the corresponding rate as 0.
 
 ### Requirement 14: Streaming Progress
 
@@ -201,8 +215,10 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHERE the Front_End supports streaming, THE Scan_API SHALL emit chunk-completion events as chunks finish processing.
-2. WHEN a chunk completes, THE Scan_API SHALL emit an event containing the chunk index and the number of findings extracted from that chunk.
+1. WHERE the Front_End supports streaming, WHEN a scan is initiated, THE Scan_API SHALL open a streaming response and emit an initial event containing the total number of chunks to be processed.
+2. WHEN a chunk completes processing, THE Scan_API SHALL emit an event containing the chunk index and the number of findings extracted from that chunk.
+3. WHEN all chunks have finished processing, THE Scan_API SHALL emit a final event indicating the scan is complete and close the streaming response.
+4. IF a chunk fails to process during a streaming response, THEN THE Scan_API SHALL emit an event containing the chunk index with a finding count of 0 and continue processing the remaining chunks.
 
 ### Requirement 15: Contradiction Caveats
 
@@ -210,6 +226,7 @@ The system is built for a 36-hour hackathon with a two-person team, so the desig
 
 #### Acceptance Criteria
 
-1. WHEN a second pass is enabled, THE Gemini_Client SHALL request, for each verified Finding, any clause that contradicts or limits the Finding.
-2. WHEN a limiting clause is found, THE Gemini_Client SHALL attach it as a caveat to the Finding with the clauseId and quote.
-3. WHEN no limiting clause is found, THE Gemini_Client SHALL leave the Finding's caveat field empty.
+1. WHERE the second pass is enabled, THE Gemini_Client SHALL request, for each verified Finding produced during a scan, any Clause that contradicts or limits that Finding.
+2. WHEN one or more limiting Clauses are found for a Finding, THE Gemini_Client SHALL attach a caveat to the Finding containing the clauseId and verbatim quote of the limiting Clause with the lowest clauseId.
+3. WHEN no limiting Clause is found for a Finding, THE Gemini_Client SHALL leave that Finding's caveat field empty.
+4. IF the second pass request for a Finding fails due to timeout or response validation failure, THEN THE Gemini_Client SHALL leave that Finding's caveat field empty and add a Warning to the Scan_Result.
