@@ -1,6 +1,6 @@
 'use client'
 
-import { ArrowLeft, Check, CircleHelp, Home, School } from 'lucide-react'
+import { Check, CircleHelp, Home, School } from 'lucide-react'
 import { inferenceRules } from '@/data/rules'
 import { samples } from '@/data/mock-data'
 
@@ -17,7 +17,6 @@ export function ExposureGuide({ onBack }: { onBack: () => void }) {
 
   return (
     <main className="visual-guide-page">
-      <button className="back-link" onClick={onBack}><ArrowLeft size={15} /> Back to exposure ledger</button>
       <section className="visual-guide-heading">
         <div>
           <h1>Your Neighborhood</h1>
