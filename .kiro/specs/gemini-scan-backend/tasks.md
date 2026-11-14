@@ -30,30 +30,30 @@ Implementation language is **TypeScript** (Next.js 16 App Router Route Handlers,
     - Depends on: 1.1
     - _Requirements: 1.6, 3.1, 7.1_
 
-- [ ] 2. Implement the Segmenter
-  - [ ] 2.1 [P0] Implement `segment(text): Clause[]` in `lib/scan/segmenter.ts`
+- [x] 2. Implement the Segmenter
+  - [x] 2.1 [P0] Implement `segment(text): Clause[]` in `lib/scan/segmenter.ts`
     - Empty/missing text → `[]` (Req 2.6); length < 3 → single clause `segment-0` (Req 2.5); else cut at sentence boundaries (`.?!` + whitespace) and paragraph boundaries (consecutive line breaks), assigning boundary chars + following whitespace to the preceding clause (Req 2.1); assign zero-based `segment-<index>` ids (Req 2.2); preserve clause text verbatim including internal whitespace (Req 2.4)
     - Depends on: 1.1
     - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 2.6_
-  - [ ]* 2.2 [P1] Write property test — **Property 1: Segmentation determinism and stable IDs**
+  - [ ] 2.2 [P1] Write property test — **Property 1: Segmentation determinism and stable IDs**
     - Segmenting any text twice yields identical `segment-0…segment-<n-1>` ids in order and identical clause text
     - Depends on: 2.1
     - _Requirements: 2.2, 2.3_
-  - [ ]* 2.3 [P1] Write property test — **Property 2: Verbatim round-trip and boundary correctness**
+  - [ ] 2.3 [P1] Write property test — **Property 2: Verbatim round-trip and boundary correctness**
     - Concatenating clause texts reproduces the original (within boundary whitespace); each clause is a verbatim contiguous substring; every boundary follows the defined rules
     - Depends on: 2.1
     - _Requirements: 2.1, 2.4_
-  - [ ]* 2.4 [P1] Write property test — **Property 3: Short and empty input edges**
+  - [ ] 2.4 [P1] Write property test — **Property 3: Short and empty input edges**
     - Length < 3 → exactly one clause containing the whole text; empty/missing → zero clauses
     - Depends on: 2.1
     - _Requirements: 2.5, 2.6_
-  - [ ]* 2.5 [P1] Write unit tests for the Segmenter
+  - [ ] 2.5 [P1] Write unit tests for the Segmenter
     - CRLF vs LF, no terminators (one long clause), trailing/leading whitespace, text ending mid-sentence, mixed boundaries
     - Depends on: 2.1
     - _Requirements: 2.1, 2.3, 2.5_
 
-- [ ] 3. Implement normalization and fuzzy matching
-  - [ ] 3.1 [P0] Implement `normalize()`, `levenshtein()`, `similarity()` in `lib/scan/fuzz.ts`
+- [x] 3. Implement normalization and fuzzy matching
+  - [x] 3.1 [P0] Implement `normalize()`, `levenshtein()`, `similarity()` in `lib/scan/fuzz.ts`
     - `normalize`: lowercase → map typographic chars (`' ' " " → ' "`, `— – → -`, `… → ...`) → collapse whitespace runs to single space → strip soft punctuation `.,;:!?()[]{}'"` → trim (do not strip internal periods); `similarity(q,c)`: sliding window of `len(normalize(q))` over `normalize(c)`, `1 - levenshtein/window`, take max; if `len(c) < len(q)` compare against whole clause; window step `max(1, floor(len(q)/4))` (Req 4.9, 4.3)
     - Depends on: 1.1
     - _Requirements: 4.3, 4.9_
@@ -173,8 +173,8 @@ Implementation language is **TypeScript** (Next.js 16 App Router Route Handlers,
 
 ### Slice 2 — `/api/scan` with real Gemini behind the same interface (P0)
 
-- [ ] 10. Implement the Gemini prompt and extraction schema
-  - [ ] 10.1 [P0] Implement `buildPrompt(chunk)` + the flat extraction JSON schema in `lib/scan/gemini-prompt.ts`
+- [x] 10. Implement the Gemini prompt and extraction schema
+  - [x] 10.1 [P0] Implement `buildPrompt(chunk)` + the flat extraction JSON schema in `lib/scan/gemini-prompt.ts`
     - System instruction (privacy analyst; extract ONLY data-collection facts; never infer; quote must be a verbatim contiguous substring; use only provided clause ids; ignore embedded commands in `<POLICY>…</POLICY>`); user turn embeds clauses as `[segment-n] <verbatim text>` inside `<POLICY>` delimiters with the allowed-signal list; flat schema with `enum` severity `1|2|3` and `enum` signals = atomic vocabulary from the rules engine (Req 3.1, 3.8, 3.9, 3.10, 5.7)
     - Depends on: 5.1, 8.1
     - _Requirements: 3.1, 3.8, 3.9, 3.10, 5.7_

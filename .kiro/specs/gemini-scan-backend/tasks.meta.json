@@ -24,6 +24,25 @@
         "chatSessionId": "sess_1746e061-72bf-4b34-ba32-0a996b38dbae",
         "timestamp": 1794637479500
       }
+    ],
+    "10.1 [P0] Implement `buildPrompt(chunk)` + the flat extraction JSON schema in `lib/scan/gemini-prompt.ts`": [
+      {
+        "executionId": "f66bc01b-567b-49b9-a943-21522f9fb9f1",
+        "chatSessionId": "sess_c74ac10b-d477-43f4-8c34-f655edfcff39",
+        "timestamp": 1794639497406
+      },
+      {
+        "executionId": "f66bc01b-567b-49b9-a943-21522f9fb9f1",
+        "chatSessionId": "sess_c74ac10b-d477-43f4-8c34-f655edfcff39",
+        "timestamp": 1794639999249
+      }
+    ],
+    "10. Implement the Gemini prompt and extraction schema": [
+      {
+        "executionId": "f66bc01b-567b-49b9-a943-21522f9fb9f1",
+        "chatSessionId": "sess_c74ac10b-d477-43f4-8c34-f655edfcff39",
+        "timestamp": 1794639999292
+      }
     ]
   }
 }
