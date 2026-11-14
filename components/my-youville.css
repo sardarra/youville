@@ -1,4 +1,8 @@
-.youville-view { width: 100%; min-width: 0; }
+.youville-view { width: 100vw; min-width: 0; margin-left: calc(50% - 50vw); }
+.youville-ledger-context { padding: 14px 24px 4px; color: #354434; font-size: 13px; }
+.youville-ledger-context p { margin: 0 0 6px; font-weight: 700; }
+.youville-ledger-context ul { display: flex; flex-wrap: wrap; gap: 6px 18px; margin: 0; padding: 0; list-style: none; }
+.youville-ledger-context li, .youville-ledger-context span { color: #667064; font-size: 12px; }
 .youville-scroll-hint { margin: 0; padding: 12px 24px; font-size: 14px; color: #354434; }
 .youville-scroll { width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .youville-scroll:focus-visible { outline: 3px solid #64745d; outline-offset: -3px; }

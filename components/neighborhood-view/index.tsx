@@ -43,7 +43,7 @@ const absolute = (top: number, left: number, width: number, height: number): CSS
   position: 'absolute', top, left, width, height,
 })
 
-export function Frame({ name = 'Your', company = 'Select a policy' }: { name?: string; company?: string }) {
+export function NeighborhoodView({ name = 'Your', company = 'Select a policy' }: { name?: string; company?: string }) {
   return (
     <div className="youville-scene" style={{ background: 'linear-gradient(90deg, #b3f0ff 17%, #dddd58 55%, #ddaa58 73%, #cf4826 100%)' }}>
       <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #007360)' }} />
