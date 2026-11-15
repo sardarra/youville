@@ -87,3 +87,20 @@
 }
 
 .policy-comparison-empty { padding: 28px 20px; color: #737b6c; font-size: 13px; line-height: 1.6; text-align: left; }
+.ledger-top h2 { font-size: 24px; }
+.ledger-top p { font-size: 14px; line-height: 1.5; }
+.legend-dot { font-size: 13px; }
+.table-scroll { max-height: 420px; overflow: auto; }
+.table-scroll thead { position: sticky; top: 0; z-index: 1; }
+.table-scroll th, .table-scroll td { font-size: 14px; padding: 15px 12px; }
+.table-scroll thead th { font-size: 12px; }
+.table-scroll tbody th { font-size: 14px; }
+.table-scroll .ledger-app-icon { width: 30px; height: 30px; font-size: 10px; }
+.table-scroll .score-pill { font-size: 14px; }
+.table-scroll .score-pill small { font-size: 11px; }
+@media(max-width: 600px) {
+  .table-scroll { max-height: 360px; }
+  .table-scroll th, .table-scroll td { font-size: 13px; padding: 13px 10px; }
+  .table-scroll thead th { font-size: 11px; }
+  .table-scroll tbody th { font-size: 13px; }
+}

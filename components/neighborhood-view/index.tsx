@@ -52,7 +52,7 @@ export function NeighborhoodView() {
         <div aria-hidden="true" style={{ ...absolute(741, 0, 5042, 339), background: '#00af0f', zIndex: 2 }} />
         <img alt="" src="/youville/Road.svg" style={{ ...absolute(672, 0, 5042, 69), zIndex: 2 }} draggable={false} />
         {artwork.map(({ file, label = '', top, left, width, height, foreground }) => (
-          <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={{ ...absolute(top, left, width, height), zIndex: foreground ? 3 : 1, objectFit: file === 'Mailbox.svg' ? 'fill' : undefined }} draggable={false} />
+          <img key={file} alt={label} className={file === 'Thall.svg' ? 'town-hall-artwork' : undefined} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={{ ...absolute(top, left, width, height), zIndex: foreground ? 3 : 1, objectFit: file === 'Mailbox.svg' ? 'fill' : undefined }} draggable={false} />
         ))}
       </div>
 
