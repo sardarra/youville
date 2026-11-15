@@ -385,7 +385,6 @@ function ScanPage({
         <label htmlFor="your-name">Your name</label>
         <input id="your-name" autoComplete="given-name" maxLength={40} placeholder="What should we call your neighborhood?" value={name} onChange={(event) => onNameChange(event.target.value)} />
       </div>
-      <h2 className="policy-prompt">See what they see.</h2>
       <PolicyForm
         onTrySample={onOpenNeighborhood}
         text={text}
@@ -425,10 +424,10 @@ function ScanIntroduction() {
             margin: '0 auto', 
             maxWidth: '240px' 
           }} /></span>
-          <em>What companies can see about you.</em>
+          <em>What companies can see about you</em>
         </h1>
         <p>
-          A little town. A bigger picture of your privacy.
+          A little town, a bigger picture of your privacy.
           Paste a policy to discover what it could reveal about you.
         </p>
 
