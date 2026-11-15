@@ -65,7 +65,14 @@ export function buildFields(findings: VerifiedFinding[], inferences: Inference[]
 }
 
 export function exposureScore(findings: VerifiedFinding[]): number {
-  return Math.min(100, findings.filter(isVerified).reduce((score, finding) => score + finding.severity * 8, 0))
+  // Coverage of distinct supported fields, not the number of repeated quotes.
+  const fields = buildFields(findings, runRules(findings))
+  const maximum = FIELDS.reduce((sum, field) => sum + (field.basis === 'inferred' ? 0.5 : 1), 0)
+  const supported = fields.reduce((sum, field) => {
+    const inferredOnly = FIELDS.find((entry) => entry.label === field.label)?.basis === 'inferred'
+    return sum + (field.status === 'collected' && !inferredOnly ? 1 : field.status !== 'not_found' ? 0.5 : 0)
+  }, 0)
+  return Math.round(100 * supported / maximum)
 }
 
 export function verifiedSignalSet(findings: VerifiedFinding[]): Set<Signal | FieldLabel> {
@@ -78,4 +85,8 @@ export function verifiedSignalSet(findings: VerifiedFinding[]): Set<Signal | Fie
     for (const signal of finding.signals) signals.add(signal)
   }
   return signals
+}
+
+export function exposureColor(score: number): string {
+  return score > 80 ? '#dc2626' : score > 60 ? '#ea580c' : score >= 40 ? '#ca8a04' : '#16a34a'
 }

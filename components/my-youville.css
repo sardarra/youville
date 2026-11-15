@@ -64,3 +64,12 @@
   .neighborhood-cloud { transform: none; will-change: auto; }
   .neighborhood-building .neighborhood-artwork { transition: none; transform: none; }
 }
+
+.neighborhood-summary-link {
+  position: absolute; bottom: 20px; left: 50%; transform: translateX(-50%);
+  z-index: 5; white-space: nowrap; text-decoration: none;
+  padding: 14px 22px; font-size: 16px; border-radius: 999px;
+  box-shadow: 0 4px 16px #23372430;
+}
+/* Keep the sky, town and summary shortcut together in the first viewport. */
+.youville-scene { height: clamp(300px, calc(100svh - 340px), 620px); }

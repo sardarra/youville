@@ -44,7 +44,7 @@
 .privacy-overview { display: grid; grid-template-columns: 290px minmax(0,1fr); gap: 24px; margin-bottom: 24px; }
 .exposure-overview,.summary-table { background: #fff; border: 1px solid var(--line); border-radius: 16px; padding: 26px; }
 .exposure-overview { text-align: center; }
-.score-ring { width: 166px; height: 166px; border-radius: 50%; margin: 24px auto; padding: 12px; background: conic-gradient(#718365 var(--score), #edf0e8 0); }
+.score-ring { width: 166px; height: 166px; border-radius: 50%; margin: 24px auto; padding: 12px; background: conic-gradient(var(--score-color, #16a34a) var(--score), #edf0e8 0); }
 .score-ring > div { background: white; border-radius: 50%; height: 100%; display: flex; align-items: baseline; justify-content: center; padding-top: 38px; gap: 4px; }
 .score-ring strong { font-size: 48px; letter-spacing: -3px; font-weight: 500; }
 .score-ring span { color: #78816e; font-size: 14px; }
@@ -105,3 +105,13 @@
   .table-scroll tbody th { font-size: 13px; }
 }
 .sample-entry{display:flex;flex-direction:column;gap:7px;min-width:0}.sample-entry .sample-card{width:100%}.sample-actions,.sample-edit-form{display:flex;align-items:center;gap:7px;padding:0 2px}.sample-actions{justify-content:flex-end}.sample-actions button,.sample-edit-form button{border:1px solid #dfe1da;border-radius:6px;background:#fff;color:#62685f;padding:6px 9px;font-size:10px}.sample-actions button:last-child{color:#8b5147}.sample-edit-form input{flex:1;min-width:0;height:30px;border:1px solid #dfe1da;border-radius:6px;background:#fff;padding:0 8px;color:var(--ink);font-size:11px}.sample-edit-form button:disabled{opacity:.5;cursor:not-allowed}.sample-management-error{margin:0 0 12px;color:#8b3e31;font-size:11px}.sr-only{position:absolute;width:1px;height:1px;padding:0;margin:-1px;overflow:hidden;clip:rect(0,0,0,0);white-space:nowrap;border:0}
+
+/* Readable report text at desktop and phone sizes. */
+.privacy-summary { font-size: 16px; line-height: 1.6; }
+.privacy-summary :is(p, .method-note, .summary-counts, .summary-table th, .summary-table td, .finding-summary, .finding-card, .clause-text) { font-size: 16px; line-height: 1.6; }
+.privacy-summary :is(small, .summary-field small, .summary-not-found, .section-kicker, .could-label, .rule-id, .ledger-foot) { font-size: 13px; line-height: 1.5; }
+.privacy-summary .inference-row b { font-size: 16px; }
+.privacy-summary .inference-row small { font-size: 14px; }
+.score-ring strong { color: var(--score-color, #16a34a); }
+.privacy-summary :is(.finding-card h4, .group-heading h3, .field-tile b, .panel-tabs button, .verified-summary b, .removed-box b) { font-size: 16px; line-height: 1.5; }
+.privacy-summary :is(.source-count, .source-tip, .category-tag, .severity, .verified-badge, .jump-link, .inferred-label, .reason-popover, .profile-badge, .could-status, .map-stepper button) { font-size: 13px; line-height: 1.5; }

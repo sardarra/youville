@@ -16,7 +16,8 @@ import {
   X,
 } from 'lucide-react'
 import { MyYouville } from '@/components/my-youville'
-import { runRules, type Inference } from '@/lib/rules'
+import { exposureScore, exposureColor, runRules, type Inference } from '@/lib/rules'
+import { createSampleScan } from '@/lib/sample-scan'
 import { FIELDS } from '@/lib/taxonomy'
 import { inferPolicyName } from '@/lib/policy-name'
 import type { ScanResponse } from '@/lib/scan'
@@ -95,9 +96,11 @@ export function TcXray() {
   const [error, setError] = useState<string | null>(null)
   const [savedScansError, setSavedScansError] = useState<string | null>(null)
 
+  const displayScans = active?.source.name === 'Cloudberry (fictional demo)' ? [active] : scans
+
   const combinedInferences = useMemo(
-    () => runRules(combinedFindings(scans)),
-    [scans],
+    () => runRules(combinedFindings(displayScans)),
+    [displayScans],
   )
 
   useEffect(() => {
@@ -247,12 +250,12 @@ export function TcXray() {
       ?.scrollIntoView({ behavior: 'smooth', block: 'center' })
   }
 
-  const ledgerRows: LedgerRow[] = scans.map((scan, index) => ({
+  const ledgerRows: LedgerRow[] = displayScans.map((scan, index) => ({
     id: `${scan.source.url ?? scan.source.name}-${index}`,
     name: scan.source.name,
     initials: initials(scan.source.name),
     fields: scan.fields,
-    score: scan.exposureScore,
+    score: exposureScore(scan.findings),
   }))
 
   const locationInferences =
@@ -287,15 +290,14 @@ export function TcXray() {
           onOpenSavedScan={openSavedScan}
           onRenameSavedScan={renameSavedScan}
           onDeleteSavedScan={deleteSavedScan}
-          onOpenNeighborhood={() => { setView('ledger'); window.scrollTo({ top: 0, behavior: 'instant' }) }}
+          onOpenNeighborhood={() => openSavedScan(createSampleScan())}
         />
       )}
 
       {view === 'ledger' && (
         <main className="ledger-page">
-          <MyYouville name={name.trim() || 'You'} company={active?.source.name} scans={scans} />
+          <MyYouville name={name.trim() || 'You'} company={active?.source.name} scans={displayScans} />
           <div className="neighborhood-actions">
-            <a className="button-primary" href="#privacy-summary"><FileText size={17} /> View privacy summary <ArrowDown size={16} /></a>
             <button className="outline-button" onClick={() => setView('scan')}>Scan another policy <ArrowRight size={15} /></button>
           </div>
           <section id="privacy-summary" className="privacy-summary" aria-labelledby="summary-title">
@@ -1258,6 +1260,7 @@ function LocationPanel({
 }
 
 function PrivacyOverview({ scan }: { scan: ScanResponse }) {
+  const score = exposureScore(scan.findings)
   const collected = scan.fields.filter((field) => field.status === 'collected').length
   const inferred = scan.fields.filter((field) => field.status === 'inferred').length
   const groups = Array.from(new Set(FIELDS.map((field) => field.group)))
@@ -1265,12 +1268,12 @@ function PrivacyOverview({ scan }: { scan: ScanResponse }) {
     <div className="privacy-overview">
       <div className="exposure-overview">
         <span className="section-kicker">EXPOSURE SCORE</span>
-        <div className="score-ring" style={{ '--score': `${scan.exposureScore}%` } as CSSProperties}>
-          <div><strong>{scan.exposureScore}</strong><span>/ 100</span></div>
+        <div className="score-ring" style={{ '--score': `${score}%`, '--score-color': exposureColor(score) } as CSSProperties}>
+          <div><strong>{score}</strong><span>/ 100</span></div>
         </div>
         <p>Higher scores mean more exposure.</p>
         <div className="summary-counts"><span><b>{collected}</b> collected fields</span><span><b>{inferred}</b> possible inferences</span></div>
-        <small>Based on this policy, not a measure of actual tracking.</small>
+        <small>Policy coverage estimate: each distinct collected field counts once; possible inferences count half. Repeated claims add no points. This is not a measured probability of tracking.</small>
       </div>
       <div className="summary-table">
         <h2>What could they know?</h2>
@@ -1344,7 +1347,7 @@ function ExposureTable({
                   />
                 ))}
                 <td>
-                  <span className="score-pill">
+                  <span className="score-pill" style={{ color: exposureColor(row.score), background: `${exposureColor(row.score)}15` }}>
                     {row.score}
                     <small>/100</small>
                   </span>

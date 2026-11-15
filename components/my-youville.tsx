@@ -22,6 +22,7 @@ export function MyYouville({
       <div ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; el.style.setProperty('--cloud-near-offset', `${el.scrollLeft * 0.16}px`); el.style.setProperty('--cloud-far-offset', `${el.scrollLeft * 0.3}px`); setPosition(el.scrollLeft / Math.max(1, el.scrollWidth - el.clientWidth) * 100) }} className="youville-scroll" tabIndex={0} role="region" aria-label="Youville town preview" aria-describedby="youville-scroll-hint">
         <div className="youville-scene-space"><NeighborhoodView scans={scans} /></div>
       </div>
+      <a className="button-primary neighborhood-summary-link" href="#privacy-summary">View privacy summary <span aria-hidden="true">↓</span></a>
       <div className="youville-title-overlay">
         <h1>Welcome to {name}ville</h1>
         <p>Viewing policy for: {company ?? (scans.length ? 'all saved policies' : 'no policies scanned')}</p>

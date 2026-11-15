@@ -24,6 +24,11 @@ type Disclosure = {
 
 // Two depths let the sky glide more slowly than the street as it scrolls.
 const clouds = [
+  { file: 'Cloud-2.svg', top: 220, left: 650, width: 240, height: 92, far: true },
+  { file: 'Cloud.svg', top: 170, left: 1200, width: 290, height: 116, far: true },
+  { file: 'Cloud-1.svg', top: 245, left: 2350, width: 260, height: 99, far: false },
+  { file: 'Cloud.svg', top: 240, left: 3550, width: 260, height: 104, far: true },
+  { file: 'Cloud-2.svg', top: 200, left: 4540, width: 280, height: 107, far: false },
   { file: 'Cloud.svg', top: 22, left: -280, width: 360, height: 144, far: true },
   { file: 'Cloud-1.svg', top: 118, left: 200, width: 410, height: 157, far: false },
   { file: 'Cloud.svg', top: 16, left: 836, width: 502, height: 201, far: false },
