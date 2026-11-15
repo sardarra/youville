@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useMemo, useState } from 'react'
-import type { CSSProperties, ReactNode } from 'react'
+import type { CSSProperties, FormEvent, ReactNode } from 'react'
 import {
   ArrowDown,
   ArrowLeft,
@@ -92,6 +92,7 @@ export function TcXray() {
   const [activeClause, setActiveClause] = useState('1.1')
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [savedScansError, setSavedScansError] = useState<string | null>(null)
 
   const combinedInferences = useMemo(
     () => runRules(combinedFindings(scans)),
@@ -139,6 +140,47 @@ export function TcXray() {
     setView('results')
     resetResultsState(scan)
     window.scrollTo({ top: 0, behavior: 'smooth' })
+  }
+
+  const saveEditedScans = (updatedScans: ScanResponse[]): boolean => {
+    try {
+      window.localStorage.setItem('tcx.scans', JSON.stringify(updatedScans))
+    } catch {
+      setSavedScansError('Saved scans could not be updated in this browser.')
+      return false
+    }
+
+    setScans(updatedScans)
+    setSavedScansError(null)
+    return true
+  }
+
+  const renameSavedScan = (index: number, name: string): boolean => {
+    const trimmedName = name.trim()
+    if (!trimmedName) {
+      setSavedScansError('Enter a name for this policy.')
+      return false
+    }
+    if (trimmedName.length > 80) {
+      setSavedScansError('Policy names must be 80 characters or fewer.')
+      return false
+    }
+
+    const updatedScans = scans.map((scan, scanIndex) =>
+      scanIndex === index
+        ? { ...scan, source: { ...scan.source, name: trimmedName } }
+        : scan,
+    )
+    return saveEditedScans(updatedScans)
+  }
+
+  const deleteSavedScan = (index: number): boolean => {
+    const updatedScans = scans.filter((_, scanIndex) => scanIndex !== index)
+    if (updatedScans.length === scans.length) {
+      setSavedScansError('The selected scan could not be found.')
+      return false
+    }
+    return saveEditedScans(updatedScans)
   }
 
   const submitScan = async (body: ScanInput) => {
@@ -233,12 +275,15 @@ export function TcXray() {
           policyUrl={policyUrl}
           loading={loading}
           error={error}
+          savedScansError={savedScansError}
           isPolicyUrlValid={isValidPolicyUrl(policyUrl)}
           onTextChange={setText}
           onScanModeChange={setScanMode}
           onPolicyUrlChange={setPolicyUrl}
           onSubmit={submitScan}
           onOpenSavedScan={openSavedScan}
+          onRenameSavedScan={renameSavedScan}
+          onDeleteSavedScan={deleteSavedScan}
           onOpenNeighborhood={() => setView('ledger')}
         />
       )}
@@ -321,12 +366,15 @@ function ScanPage({
   policyUrl,
   loading,
   error,
+  savedScansError,
   isPolicyUrlValid,
   onTextChange,
   onScanModeChange,
   onPolicyUrlChange,
   onSubmit,
   onOpenSavedScan,
+  onRenameSavedScan,
+  onDeleteSavedScan,
   onOpenNeighborhood,
 }: {
   scans: ScanResponse[]
@@ -335,12 +383,15 @@ function ScanPage({
   policyUrl: string
   loading: boolean
   error: string | null
+  savedScansError: string | null
   isPolicyUrlValid: boolean
   onTextChange: (value: string) => void
   onScanModeChange: (mode: 'paste' | 'url') => void
   onPolicyUrlChange: (value: string) => void
   onSubmit: (body: ScanInput) => Promise<void>
   onOpenSavedScan: (scan: ScanResponse) => void
+  onRenameSavedScan: (index: number, name: string) => boolean
+  onDeleteSavedScan: (index: number) => boolean
   onOpenNeighborhood: () => void
 }) {
   return (
@@ -358,7 +409,13 @@ function ScanPage({
         onPolicyUrlChange={onPolicyUrlChange}
         onSubmit={onSubmit}
       />
-      <RecentScans scans={scans} onOpenSavedScan={onOpenSavedScan} />
+      <RecentScans
+        scans={scans}
+        error={savedScansError}
+        onOpenSavedScan={onOpenSavedScan}
+        onRenameSavedScan={onRenameSavedScan}
+        onDeleteSavedScan={onDeleteSavedScan}
+      />
       <MethodNote>
         Collected facts are solid. Inferences are clearly marked <b>could</b> —
         never will.
@@ -564,11 +621,38 @@ function ScanError({ message }: { message: string }) {
 
 function RecentScans({
   scans,
+  error,
   onOpenSavedScan,
+  onRenameSavedScan,
+  onDeleteSavedScan,
 }: {
   scans: ScanResponse[]
+  error: string | null
   onOpenSavedScan: (scan: ScanResponse) => void
+  onRenameSavedScan: (index: number, name: string) => boolean
+  onDeleteSavedScan: (index: number) => boolean
 }) {
+  const [editingIndex, setEditingIndex] = useState<number | null>(null)
+  const [nameDraft, setNameDraft] = useState('')
+
+  const saveName = (event: FormEvent<HTMLFormElement>) => {
+    event.preventDefault()
+    if (editingIndex === null) return
+
+    if (onRenameSavedScan(editingIndex, nameDraft)) {
+      setEditingIndex(null)
+      setNameDraft('')
+    }
+  }
+
+  const deleteScan = (index: number) => {
+    if (!onDeleteSavedScan(index)) return
+
+    setEditingIndex((current) =>
+      current !== null && current > index ? current - 1 : current,
+    )
+  }
+
   return (
     <>
       <div className="sample-heading">
@@ -579,33 +663,93 @@ function RecentScans({
         <span className="sample-note">{scans.length} saved scans</span>
       </div>
 
+      {error && (
+        <div className="sample-management-error" role="alert">
+          {error}
+        </div>
+      )}
+
       {scans.length ? (
         <div className="sample-grid">
           {scans.map((scan, index) => (
-            <button
-              className="sample-card"
+            <article
+              className="sample-entry"
               key={`${scan.source.url ?? scan.source.name}-${index}`}
-              onClick={() => onOpenSavedScan(scan)}
             >
-              <span
-                className="sample-icon"
-                style={{ '--app-color': '#6d7562' } as CSSProperties}
+              <button
+                type="button"
+                className="sample-card"
+                onClick={() => onOpenSavedScan(scan)}
               >
-                {initials(scan.source.name)}
-              </span>
-              <span className="sample-info">
-                <span>
-                  {scan.source.type === 'url' ? 'Policy URL' : 'Pasted policy'}
+                <span
+                  className="sample-icon"
+                  style={{ '--app-color': '#6d7562' } as CSSProperties}
+                >
+                  {initials(scan.source.name)}
                 </span>
-                <strong>{scan.source.name}</strong>
-                <small>
-                  {scan.clauses.length} clauses · {scan.stats.verified} verified
-                  findings
-                </small>
-              </span>
-              <ArrowRight className="sample-arrow" size={18} />
-              <span className="sample-index">0{index + 1}</span>
-            </button>
+                <span className="sample-info">
+                  <span>
+                    {scan.source.type === 'url'
+                      ? 'Policy URL'
+                      : 'Pasted policy'}
+                  </span>
+                  <strong>{scan.source.name}</strong>
+                  <small>
+                    {scan.clauses.length} clauses · {scan.stats.verified}{' '}
+                    verified findings
+                  </small>
+                </span>
+                <ArrowRight className="sample-arrow" size={18} />
+                <span className="sample-index">0{index + 1}</span>
+              </button>
+              {editingIndex === index ? (
+                <form className="sample-edit-form" onSubmit={saveName}>
+                  <label className="sr-only" htmlFor={`scan-name-${index}`}>
+                    Policy name
+                  </label>
+                  <input
+                    id={`scan-name-${index}`}
+                    value={nameDraft}
+                    onChange={(event) => setNameDraft(event.target.value)}
+                    maxLength={80}
+                    required
+                    autoFocus
+                  />
+                  <button type="submit" disabled={!nameDraft.trim()}>
+                    Save
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => {
+                      setEditingIndex(null)
+                      setNameDraft('')
+                    }}
+                  >
+                    Cancel
+                  </button>
+                </form>
+              ) : (
+                <div className="sample-actions">
+                  <button
+                    type="button"
+                    aria-label={`Rename ${scan.source.name}`}
+                    onClick={() => {
+                      setEditingIndex(index)
+                      setNameDraft(scan.source.name)
+                    }}
+                  >
+                    Rename
+                  </button>
+                  <button
+                    type="button"
+                    aria-label={`Delete ${scan.source.name}`}
+                    onClick={() => deleteScan(index)}
+                  >
+                    Delete
+                  </button>
+                </div>
+              )}
+            </article>
           ))}
         </div>
       ) : (
