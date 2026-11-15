@@ -423,7 +423,7 @@ function ScanIntroduction() {
           <span className="landing-wordmark"><img src={logo.src} alt="Youville" style={{ 
             display: 'block', 
             margin: '0 auto', 
-            maxWidth: '150px' 
+            maxWidth: '240px' 
           }} /></span>
           <em>What companies can see about you.</em>
         </h1>
