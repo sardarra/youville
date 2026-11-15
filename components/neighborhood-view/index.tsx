@@ -7,6 +7,7 @@ type Artwork = {
   left: number
   width: number
   height: number
+  foreground?: boolean
 }
 
 // Positions follow the Anima frame; complete Figma exports replace its fragments.
@@ -25,38 +26,36 @@ const artwork: Artwork[] = [
   { file: 'Tree-3.svg', top: 465, left: 535, width: 172, height: 217 },
   { file: 'Tree-2.svg', top: 485, left: 2172, width: 156, height: 196 },
   { file: 'Street Sign.svg', label: 'Youstreet street sign', top: 467, left: 10, width: 181, height: 237 },
-  { file: 'Mailbox.svg', label: 'Mailbox', top: 587, left: 745, width: 60, height: 85 },
+  { file: 'Mailbox.svg', label: 'Mailbox', top: 595, left: 745, width: 60, height: 85 },
   { file: 'Lamppost.svg', top: 393, left: 2830, width: 306, height: 294 },
   { file: 'Lamppost-1.svg', top: 393, left: 3766, width: 306, height: 294 },
   { file: 'Lamppost-2.svg', top: 393, left: 4704, width: 306, height: 294 },
-  { file: 'Bench.svg', top: 750, left: 1411, width: 246, height: 109 },
-  { file: 'Bench-1.svg', top: 790, left: 361, width: 246, height: 109 },
-  { file: 'Bench-2.svg', top: 805, left: 3326, width: 246, height: 109 },
-  { file: 'Fountain.svg', label: 'Fountain pool', top: 833, left: 1192, width: 687, height: 174 },
-  { file: 'Fountaion.svg', top: 720, left: 1312, width: 453, height: 196 },
-  { file: 'Asiangirl.svg', label: 'Person beside the fountain', top: 751, left: 1182, width: 90, height: 150 },
-  { file: 'Pinkshirtperson.svg', label: 'Person in pink shirt', top: 727, left: 1269, width: 109, height: 144 },
-  { file: 'redshirtboy.svg', label: 'Person in red shirt', top: 748, left: 1726, width: 92, height: 144 },
+  { file: 'Bench.svg', foreground: true, top: 750, left: 1411, width: 246, height: 109 },
+  { file: 'Bench-1.svg', foreground: true, top: 790, left: 361, width: 246, height: 109 },
+  { file: 'Bench-2.svg', foreground: true, top: 805, left: 3326, width: 246, height: 109 },
+  { file: 'Fountain.svg', foreground: true, label: 'Fountain pool', top: 833, left: 1192, width: 687, height: 174 },
+  { file: 'Fountaion.svg', foreground: true, top: 720, left: 1312, width: 453, height: 196 },
+  { file: 'Asiangirl.svg', foreground: true, label: 'Person beside the fountain', top: 751, left: 1182, width: 90, height: 150 },
+  { file: 'Pinkshirtperson.svg', foreground: true, label: 'Person in pink shirt', top: 727, left: 1269, width: 109, height: 144 },
+  { file: 'redshirtboy.svg', foreground: true, label: 'Person in red shirt', top: 748, left: 1726, width: 92, height: 144 },
 ]
 
 const absolute = (top: number, left: number, width: number, height: number): CSSProperties => ({
-  position: 'absolute', top, left, width, height,
+  position: 'absolute', top: `${top / 1080 * 100}%`, left: `${left / 5042 * 100}%`, width: `${width / 5042 * 100}%`, height: `${height / 1080 * 100}%`,
 })
 
-export function NeighborhoodView({ name = 'Your', company = 'Select a policy' }: { name?: string; company?: string }) {
+export function NeighborhoodView() {
   return (
     <>
       <div className="youville-scene" style={{ background: '#b3f0ff' }}>
-        <div aria-hidden="true" style={{ ...absolute(672, 0, 5042, 408), background: 'linear-gradient(90deg, #00af0f, #00af0f)' }} />
-        <img alt="" src="/youville/Road.svg" style={absolute(727, 0, 5042, 69)} draggable={false} />
-        {artwork.map(({ file, label = '', top, left, width, height }) => (
-          <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={absolute(top, left, width, height)} draggable={false} />
+        {/* Road and lawn mask building bases; park objects remain above both. */}
+        <div aria-hidden="true" style={{ ...absolute(741, 0, 5042, 339), background: '#00af0f', zIndex: 2 }} />
+        <img alt="" src="/youville/Road.svg" style={{ ...absolute(672, 0, 5042, 69), zIndex: 2 }} draggable={false} />
+        {artwork.map(({ file, label = '', top, left, width, height, foreground }) => (
+          <img key={file} alt={label} src={`/youville/${encodeURIComponent(file)}`} width={width} height={height} style={{ ...absolute(top, left, width, height), zIndex: foreground ? 3 : 1, objectFit: file === 'Mailbox.svg' ? 'fill' : undefined }} draggable={false} />
         ))}
       </div>
-      <div className="youville-title-overlay">
-        <h1>Welcome to {name}ville</h1>
-        <p>Scroll sideways to explore</p>
-      </div>
+
     </>
   )
 }

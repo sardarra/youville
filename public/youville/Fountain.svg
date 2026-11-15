@@ -1,18 +1,6 @@
 <svg width="687" height="174" viewBox="0 0 687 174" fill="none" xmlns="http://www.w3.org/2000/svg">
-<foreignObject x="0" y="0" width="687" height="174" overflow="visible" data-figma-3d="true">
-<div xmlns="http://www.w3.org/1999/xhtml" style="position:relative;width:687px;height:174px">
-<div style="position:absolute;left:0;top:0;margin:0;width:687px;height:174px;transform-origin:0 0;transform:matrix(1, 0, 0, 1, 0, 0);transform-style:preserve-3d">
-<svg xmlns="http://www.w3.org/2000/svg" width="687" height="174" overflow="visible" style="position:absolute;left:0;top:0;overflow:visible">
-</svg>
-<svg xmlns="http://www.w3.org/2000/svg" width="687" height="174" overflow="visible" style="position:absolute;left:0;top:0;overflow:visible">
-<g filter="url(#filter0_n_20_113)">
-<ellipse cx="343.5" cy="87" rx="343.5" ry="87" fill="#BDBDBD"/>
-</g>
+<g filter="url(#filter0_n_20_113)"><ellipse cx="343.5" cy="87" rx="343.5" ry="87" fill="#BDBDBD"/></g>
 <ellipse cx="342.5" cy="84" rx="270.5" ry="57" fill="#4FB9FF"/>
-</svg>
-</div>
-</div>
-</foreignObject>
 <defs>
 <filter id="filter0_n_20_113" x="0" y="0" width="687" height="174" filterUnits="userSpaceOnUse" color-interpolation-filters="sRGB">
 <feFlood flood-opacity="0" result="BackgroundImageFix"/>

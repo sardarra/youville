@@ -21,7 +21,7 @@ import { FIELDS } from '@/lib/taxonomy'
 import type { ScanResponse } from '@/lib/scan'
 import type { VerifiedFinding } from '@/lib/verify'
 
-type View = 'scan' | 'results' | 'ledger'
+type View = 'scan' | 'ledger'
 type PanelTab = 'Findings' | 'Profile' | 'Location'
 type ScanInput = { text?: string; url?: string }
 type LedgerRow = {
@@ -80,6 +80,7 @@ function isValidPolicyUrl(value: string): boolean {
 
 export function TcXray() {
   const [view, setView] = useState<View>('scan')
+  const [name, setName] = useState('')
   const [active, setActive] = useState<ScanResponse | null>(null)
   const [scans, setScans] = useState<ScanResponse[]>([])
   const [text, setText] = useState('')
@@ -122,7 +123,7 @@ export function TcXray() {
 
   const openSavedScan = (scan: ScanResponse) => {
     setActive(scan)
-    setView('results')
+    setView('ledger')
     resetResultsState(scan)
     window.scrollTo({ top: 0, behavior: 'smooth' })
   }
@@ -154,7 +155,7 @@ export function TcXray() {
 
       setScans(updatedScans)
       setActive(result)
-      setView('results')
+      setView('ledger')
       resetResultsState(result)
 
       try {
@@ -209,10 +210,12 @@ export function TcXray() {
         view === 'ledger' ? 'app-shell-neighborhood' : ''
       }`}
     >
-      <SiteHeader view={view} onChangeView={setView} />
+
 
       {view === 'scan' && (
         <ScanPage
+          name={name}
+          onNameChange={setName}
           scans={scans}
           text={text}
           scanMode={scanMode}
@@ -225,11 +228,26 @@ export function TcXray() {
           onPolicyUrlChange={setPolicyUrl}
           onSubmit={submitScan}
           onOpenSavedScan={openSavedScan}
-          onOpenNeighborhood={() => setView('ledger')}
+          onOpenNeighborhood={() => { setView('ledger'); window.scrollTo({ top: 0, behavior: 'instant' }) }}
         />
       )}
 
-      {view === 'results' && active && (
+      {view === 'ledger' && (
+        <main className="ledger-page">
+          <MyYouville name={name.trim() || 'You'} company={active?.source.name} scans={scans} inferences={combinedInferences} />
+          <div className="neighborhood-actions">
+            <a className="button-primary" href="#privacy-summary"><FileText size={17} /> View privacy summary <ArrowDown size={16} /></a>
+            <button className="outline-button" onClick={() => setView('scan')}>Scan another policy <ArrowRight size={15} /></button>
+          </div>
+          <section id="privacy-summary" className="privacy-summary" aria-labelledby="summary-title">
+            <div className="ledger-heading">
+              <span className="section-kicker">WHAT COMPANIES CAN SEE ABOUT YOU</span>
+              <h1 id="summary-title">{active ? `${active.source.name} privacy report` : 'Your privacy summary'}</h1>
+              <p>Your neighborhood, explained. Explore what is collected and what could be inferred.</p>
+            </div>
+            {active ? <PrivacyOverview scan={active} /> : <MethodNote>Scan a policy to see your privacy report here.</MethodNote>}
+            <ExposureTable rows={ledgerRows} />
+            {active && (
         <ResultsPage
           scan={active}
           tab={tab}
@@ -238,7 +256,7 @@ export function TcXray() {
           activeClause={activeClause}
           locationInferences={locationInferences}
           onBack={() => setView('scan')}
-          onOpenNeighborhood={() => setView('ledger')}
+          onOpenNeighborhood={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
           onTabChange={setTab}
           onLocationIndexChange={setLocationIndex}
           onFieldSelect={(field) =>
@@ -247,10 +265,10 @@ export function TcXray() {
           onClauseSelect={setActiveClause}
           onJumpToClause={jumpToClause}
         />
-      )}
-
-      {view === 'ledger' && (
-        <LedgerPage scans={scans} rows={ledgerRows} inferences={combinedInferences} />
+            )}
+            {scans.length > 0 && <CombinedInferencePanel inferences={combinedInferences} />}
+          </section>
+        </main>
       )}
 
       <SiteFooter />
@@ -258,49 +276,9 @@ export function TcXray() {
   )
 }
 
-function SiteHeader({
-  view,
-  onChangeView,
-}: {
-  view: View
-  onChangeView: (view: View) => void
-}) {
-  return (
-    <header className="topbar">
-      <a
-        className="brand"
-        href="#"
-        onClick={(event) => {
-          event.preventDefault()
-          onChangeView('scan')
-        }}
-      >
-        <span className="brand-mark">
-          <ScanSearch size={19} />
-        </span>
-        <span>
-          <b>You</b>ville
-        </span>
-      </a>
-      <nav className="main-nav" aria-label="Main navigation">
-        <button
-          className={view === 'scan' ? 'nav-active' : ''}
-          onClick={() => onChangeView('scan')}
-        >
-          Scan
-        </button>
-        <button
-          className={view === 'ledger' ? 'nav-active' : ''}
-          onClick={() => onChangeView('ledger')}
-        >
-          My Neighborhood
-        </button>
-      </nav>
-    </header>
-  )
-}
-
 function ScanPage({
+  name,
+  onNameChange,
   scans,
   text,
   scanMode,
@@ -315,6 +293,8 @@ function ScanPage({
   onOpenSavedScan,
   onOpenNeighborhood,
 }: {
+  name: string
+  onNameChange: (name: string) => void
   scans: ScanResponse[]
   text: string
   scanMode: 'paste' | 'url'
@@ -331,8 +311,14 @@ function ScanPage({
 }) {
   return (
     <main className="scan-page">
-      <ScanIntroduction onOpenNeighborhood={onOpenNeighborhood} />
+      <ScanIntroduction />
+      <div className="name-field">
+        <label htmlFor="your-name">Your name</label>
+        <input id="your-name" autoComplete="given-name" maxLength={40} placeholder="What should we call your neighborhood?" value={name} onChange={(event) => onNameChange(event.target.value)} />
+      </div>
+      <h2 className="policy-prompt">See who’s really watching.</h2>
       <PolicyForm
+        onTrySample={onOpenNeighborhood}
         text={text}
         scanMode={scanMode}
         policyUrl={policyUrl}
@@ -353,35 +339,26 @@ function ScanPage({
   )
 }
 
-function ScanIntroduction({
-  onOpenNeighborhood,
-}: {
-  onOpenNeighborhood: () => void
-}) {
+function ScanIntroduction() {
   return (
     <section className="scan-intro">
       <div>
         <h1>
-          A neighborhood of you
-          <br />
-          <em>based on what companies collect</em>
+          <span className="landing-wordmark">YOUVILLE</span>
+          <em>What companies can see about you.</em>
         </h1>
         <p>
-          See what a company&apos;s terms say it collects, what that could
-          reveal, and who gets a copy.
+          A little town. A bigger picture of your privacy.
+          Paste a policy to discover what it could reveal about you.
         </p>
-        <button
-          className="outline-button scan-visual-link"
-          onClick={onOpenNeighborhood}
-        >
-          My Neighborhood <ArrowRight size={15} />
-        </button>
+
       </div>
     </section>
   )
 }
 
 function PolicyForm({
+  onTrySample,
   text,
   scanMode,
   policyUrl,
@@ -393,6 +370,7 @@ function PolicyForm({
   onPolicyUrlChange,
   onSubmit,
 }: {
+  onTrySample: () => void
   text: string
   scanMode: 'paste' | 'url'
   policyUrl: string
@@ -448,6 +426,7 @@ function PolicyForm({
         />
       )}
 
+      <div className="sample-link-row"><button type="button" className="try-sample" onClick={onTrySample} disabled={loading}>try a sample</button></div>
       {error && <ScanError message={error} />}
     </section>
   )
@@ -482,7 +461,7 @@ function PastePolicyForm({
           onClick={() => void onSubmit()}
           disabled={!text.trim() || loading}
         >
-          {loading ? 'Scanning…' : 'Scan terms'}
+          {loading ? 'Scanning…' : 'Explore my neighborhood'}
           {!loading && <ArrowRight size={16} />}
         </button>
       </div>
@@ -526,7 +505,7 @@ function UrlPolicyForm({
           onClick={() => void onSubmit()}
           disabled={!isPolicyUrlValid || loading}
         >
-          {loading ? 'Scanning…' : 'Scan URL'}
+          {loading ? 'Scanning…' : 'Explore my neighborhood'}
           {!loading && <ArrowRight size={16} />}
         </button>
       </div>
@@ -642,7 +621,9 @@ function ResultsPage({
   onJumpToClause: (clauseId: string) => void
 }) {
   return (
-    <main className="results-wrap">
+    <details className="report-details">
+      <summary>Explore the full report <span>Source clauses, findings, and profile</span></summary>
+      <div className="results-wrap">
       <ResultsHeading
         scan={scan}
         onBack={onBack}
@@ -678,7 +659,8 @@ function ResultsPage({
           )}
         </aside>
       </div>
-    </main>
+      </div>
+    </details>
   )
 }
 
@@ -710,7 +692,7 @@ function ResultsHeading({
           </p>
         </div>
         <button className="outline-button" onClick={onOpenNeighborhood}>
-          Open exposure ledger <ArrowRight size={15} />
+          Back to neighborhood <ArrowRight size={15} />
         </button>
       </div>
     </div>
@@ -1117,34 +1099,33 @@ function LocationPanel({
   )
 }
 
-function LedgerPage({
-  scans,
-  rows,
-  inferences,
-}: {
-  scans: ScanResponse[]
-  rows: LedgerRow[]
-  inferences: Inference[]
-}) {
+function PrivacyOverview({ scan }: { scan: ScanResponse }) {
+  const collected = scan.fields.filter((field) => field.status === 'collected').length
+  const inferred = scan.fields.filter((field) => field.status === 'inferred').length
+  const groups = Array.from(new Set(FIELDS.map((field) => field.group)))
   return (
-    <main className="ledger-page">
-      <MyYouville scans={scans} inferences={inferences} />
-      <div className="ledger-heading">
-        <span className="section-kicker">YOUR PRIVACY, ACROSS POLICIES</span>
-        <h1>Exposure ledger</h1>
-        <p>One policy sees a slice. Together, they may reveal more.</p>
+    <div className="privacy-overview">
+      <div className="exposure-overview">
+        <span className="section-kicker">EXPOSURE SCORE</span>
+        <div className="score-ring" style={{ '--score': `${scan.exposureScore}%` } as CSSProperties}>
+          <div><strong>{scan.exposureScore}</strong><span>/ 100</span></div>
+        </div>
+        <p>Higher scores mean more exposure.</p>
+        <div className="summary-counts"><span><b>{collected}</b> collected fields</span><span><b>{inferred}</b> possible inferences</span></div>
+        <small>Based on this policy, not a measure of actual tracking.</small>
       </div>
-
-      <ExposureTable rows={rows} />
-
-      {!scans.length && (
-        <MethodNote>
-          Scan a policy to add verified results to your ledger.
-        </MethodNote>
-      )}
-
-      <CombinedInferencePanel inferences={inferences} />
-    </main>
+      <div className="summary-table">
+        <h2>What could they know?</h2>
+        <p>Verified collection and possibilities, at a glance.</p>
+        <table>
+          <thead><tr><th scope="col">Area of your life</th><th scope="col">Policy findings</th></tr></thead>
+          <tbody>{groups.map((group) => {
+            const fields = scan.fields.filter((field) => field.group === group && field.status !== 'not_found')
+            return <tr key={group}><th scope="row">{group}</th><td>{fields.length ? fields.map((field) => <span className={`summary-field ${field.status}`} key={field.label}>{field.label}<small>{field.status === 'inferred' ? 'Could infer' : 'Collected'}</small></span>) : <span className="summary-not-found">Not identified in this policy</span>}</td></tr>
+          })}</tbody>
+        </table>
+      </div>
+    </div>
   )
 }
 
@@ -1164,7 +1145,7 @@ function ExposureTable({
       </div>
 
       <div className="table-scroll">
-        <table>
+        <table aria-label="Collected data comparison across policies">
           <thead>
             <tr>
               <th>POLICY</th>
@@ -1177,6 +1158,13 @@ function ExposureTable({
             </tr>
           </thead>
           <tbody>
+            {rows.length === 0 && (
+              <tr>
+                <td colSpan={FIELDS.length + 2} className="policy-comparison-empty">
+                  Your scanned policies will appear here, with the data each collects and its exposure score.
+                </td>
+              </tr>
+            )}
             {rows.map((row) => (
               <tr key={row.id}>
                 <th>
@@ -1279,7 +1267,7 @@ function SiteFooter() {
   return (
     <footer className="site-footer">
       <span>
-        T&amp;C X-ray <span className="footer-dot">·</span> Privacy, in plain
+        Youville <span className="footer-dot">·</span> Privacy, in plain
         sight.
       </span>
       <b>Reading aid, not legal advice.</b>
