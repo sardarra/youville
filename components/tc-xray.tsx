@@ -23,6 +23,8 @@ import { inferPolicyName } from '@/lib/policy-name'
 import type { ScanResponse } from '@/lib/scan'
 import type { VerifiedFinding } from '@/lib/verify'
 
+import logo from '../assets/logo.png'
+
 type View = 'scan' | 'ledger'
 type PanelTab = 'Findings' | 'Profile' | 'Location'
 type ScanInput = { text?: string; url?: string }
@@ -417,7 +419,12 @@ function ScanIntroduction() {
     <section className="scan-intro">
       <div>
         <h1>
-          <span className="landing-wordmark">YOUVILLE</span>
+          {/** logo should be centered and a bit smaller */}
+          <span className="landing-wordmark"><img src={logo.src} alt="Youville" style={{ 
+            display: 'block', 
+            margin: '0 auto', 
+            maxWidth: '150px' 
+          }} /></span>
           <em>What companies can see about you.</em>
         </h1>
         <p>
