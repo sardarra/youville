@@ -111,7 +111,7 @@
 .neighborhood-park { border-radius: 45%; }
 .neighborhood-park .park-artwork { transition: filter .2s, transform .2s; }
 .neighborhood-park:hover .park-artwork,
-.neighborhood-park:focus-visible .park-artwork,
+.neighborhood-park:focus-visible .park-artwork { transform: translateY(-3px); }
 .neighborhood-park[aria-pressed="true"] .park-artwork { filter: drop-shadow(0 0 6px #fff9b0); transform: translateY(-3px); }
 @media (prefers-reduced-motion: reduce) {
   .neighborhood-park .park-artwork { transition: none; transform: none !important; }
