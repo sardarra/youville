@@ -1,7 +1,7 @@
 .youville-view { width: 100%; min-width: 0; border: 1px solid #d6dfd0; border-radius: 20px; overflow: hidden; background: #b3f0ff; }
 .youville-scroll-hint { margin: 0; padding: 12px 24px; font-size: 12px; color: #354434; background: #f2f6ee; }
 .youville-viewport { position: relative; }
-.youville-scroll { cursor: grab; user-select: none; -webkit-user-select: none; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
+.youville-scroll { user-select: none; -webkit-user-select: none; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .youville-scroll:focus-visible { outline: 3px solid #64745d; outline-offset: -3px; }
 .youville-scene-space { position: relative; width: 220%; min-width: 2200px; padding-top: 100px; }
 .youville-scene { position: relative; overflow: hidden; width: 100%; height: clamp(360px, calc(100svh - 210px), 740px); }
@@ -20,5 +20,4 @@
 .youville-scrollbar input::-moz-range-thumb { width: clamp(60px, 24vw, 360px); height: 14px; border: 0; border-radius: 20px; background: #7a8a70; }
 .youville-scrollbar input:focus-visible { outline: 2px solid #354434; outline-offset: 5px; }
 
-.youville-scroll.is-dragging { cursor: grabbing; }
 .youville-scroll img { -webkit-user-drag: none; }
