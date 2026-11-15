@@ -4,6 +4,7 @@ import { GeminiExtractor } from '@/lib/extract'
 import { readCachedScan, normalizedTextHash } from '@/lib/cache'
 import { fetchPolicyUrl, PolicyFetchError } from '@/lib/fetch-url'
 import { scanText, type ScanResponse } from '@/lib/scan'
+import { inferPolicyName } from '@/lib/policy-name'
 
 export const runtime = 'nodejs'
 
@@ -111,7 +112,7 @@ export async function POST(request: NextRequest) {
     } else {
       text = parsed.data.text!.trim()
       if (!text) return errorResponse(400, 'EMPTY_TEXT', 'Paste policy text to scan.')
-      source = { name: 'Pasted policy', type: 'text' }
+      source = { name: inferPolicyName(text) ?? 'Pasted policy', type: 'text' }
     }
   } catch (error) {
     if (error instanceof PolicyFetchError) return errorResponse(502, 'FETCH_FAILED', error.message)

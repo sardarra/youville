@@ -18,6 +18,7 @@ import {
 import { MyYouville } from '@/components/my-youville'
 import { runRules, type Inference } from '@/lib/rules'
 import { FIELDS } from '@/lib/taxonomy'
+import { inferPolicyName } from '@/lib/policy-name'
 import type { ScanResponse } from '@/lib/scan'
 import type { VerifiedFinding } from '@/lib/verify'
 
@@ -104,7 +105,20 @@ export function TcXray() {
 
       const parsed: unknown = JSON.parse(saved)
       if (Array.isArray(parsed)) {
-        setScans(parsed as ScanResponse[])
+        const restoredScans = (parsed as ScanResponse[]).map((scan) => {
+          if (scan.source.type !== 'text' || scan.source.name !== 'Pasted policy') {
+            return scan
+          }
+
+          const inferredName = inferPolicyName(
+            scan.clauses.map((clause) => clause.text).join('\n'),
+          )
+          return inferredName
+            ? { ...scan, source: { ...scan.source, name: inferredName } }
+            : scan
+        })
+
+        setScans(restoredScans)
       } else {
         setError('Saved scans could not be loaded from this browser.')
       }

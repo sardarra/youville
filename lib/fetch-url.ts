@@ -5,6 +5,11 @@ import { request as httpRequest } from 'node:http'
 import { request as httpsRequest } from 'node:https'
 import type { IncomingMessage, RequestOptions } from 'node:http'
 import * as cheerio from 'cheerio'
+import {
+  inferNameFromPolicyTitle,
+  inferWebsiteNameFromTitle,
+  normalizeWebsiteName,
+} from '@/lib/policy-name'
 
 const MAX_BYTES = 2 * 1024 * 1024
 const MAX_REDIRECTS = 3
@@ -155,6 +160,25 @@ export function htmlToText(html: string): string {
   return (blocks.length ? blocks.join('\n') : $('body').text()).replace(/\n{2,}/g, '\n').trim()
 }
 
+export function websiteNameFromHtml(html: string, fallback: string): string {
+  const $ = cheerio.load(html)
+  const metadataName =
+    $('meta[property="og:site_name"]').attr('content')?.trim() ||
+    $('meta[name="application-name"]').attr('content')?.trim()
+
+  const normalizedMetadataName = metadataName
+    ? normalizeWebsiteName(metadataName)
+    : null
+  if (normalizedMetadataName) return normalizedMetadataName
+
+  const title = $('title').first().text()
+  return (
+    inferNameFromPolicyTitle(title) ??
+    inferWebsiteNameFromTitle(title) ??
+    fallback
+  )
+}
+
 export async function fetchPolicyUrl(input: string): Promise<{ text: string; url: string; name: string }> {
   let currentUrl: URL
   try {
@@ -187,9 +211,14 @@ export async function fetchPolicyUrl(input: string): Promise<{ text: string; url
 
     const contentType = response.headers['content-type']?.toLowerCase() ?? ''
     const raw = body.toString('utf8')
-    const text = contentType.includes('text/html') || /<html[\s>]/i.test(raw) ? htmlToText(raw) : raw.trim()
+    const isHtml = contentType.includes('text/html') || /<html[\s>]/i.test(raw)
+    const text = isHtml ? htmlToText(raw) : raw.trim()
     if (!text || /enable javascript|requires javascript|javascript is required/i.test(text.slice(0, 1000))) throw new PolicyFetchError()
-    return { text, url: currentUrl.toString(), name: currentUrl.hostname }
+    return {
+      text,
+      url: currentUrl.toString(),
+      name: isHtml ? websiteNameFromHtml(raw, currentUrl.hostname) : currentUrl.hostname,
+    }
   }
 
   throw new PolicyFetchError()
