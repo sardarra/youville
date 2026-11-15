@@ -385,7 +385,7 @@ function ScanPage({
         <label htmlFor="your-name">Your name</label>
         <input id="your-name" autoComplete="given-name" maxLength={40} placeholder="What should we call your neighborhood?" value={name} onChange={(event) => onNameChange(event.target.value)} />
       </div>
-      <h2 className="policy-prompt">See who’s really watching.</h2>
+      <h2 className="policy-prompt">See what they see.</h2>
       <PolicyForm
         onTrySample={onOpenNeighborhood}
         text={text}

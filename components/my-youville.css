@@ -1,4 +1,10 @@
-.youville-view { width: 100%; min-width: 0; border: 1px solid #d6dfd0; border-radius: 20px; overflow: hidden; background: #b3f0ff; }
+.youville-view { 
+    width: 100%;
+    min-width: 0;
+    border-radius: 20px;
+    overflow: hidden;
+    background: #b3f0ff;
+}
 .youville-scroll-hint { margin: 0; padding: 12px 24px; font-size: 12px; color: #354434; background: #f2f6ee; }
 .youville-viewport { position: relative; }
 .youville-scroll { user-select: none; -webkit-user-select: none; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
