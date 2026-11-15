@@ -36,3 +36,31 @@
 .youville-scrollbar input:focus-visible { outline: 2px solid #354434; outline-offset: 5px; }
 
 .youville-scroll img { -webkit-user-drag: none; }
+
+/* Only the artwork lifts: the hit target and policy tooltip stay steady. */
+.neighborhood-building .neighborhood-artwork {
+  transform: translateY(0);
+  transition: transform 340ms cubic-bezier(.22, 1.5, .36, 1);
+}
+@media (hover: hover) {
+  .neighborhood-building:hover .neighborhood-artwork { transform: translateY(-8px); }
+}
+.neighborhood-building:focus-visible .neighborhood-artwork { transform: translateY(-8px); }
+.neighborhood-building:active .neighborhood-artwork {
+  transform: translateY(-3px);
+  transition-duration: 100ms;
+}
+.neighborhood-cloud {
+  pointer-events: none;
+  object-fit: contain;
+  transform: translate3d(var(--cloud-near-offset, 0px), 0, 0);
+  will-change: transform;
+}
+.neighborhood-cloud-far {
+  opacity: .8;
+  transform: translate3d(var(--cloud-far-offset, 0px), 0, 0);
+}
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-cloud { transform: none; will-change: auto; }
+  .neighborhood-building .neighborhood-artwork { transition: none; transform: none; }
+}

@@ -12,6 +12,7 @@ type Artwork = {
   left: number
   width: number
   height: number
+  building?: boolean
   foreground?: boolean
 }
 
@@ -21,13 +22,25 @@ type Disclosure = {
   status: 'collected' | 'inferred'
 }
 
+// Two depths let the sky glide more slowly than the street as it scrolls.
+const clouds = [
+  { file: 'Cloud.svg', top: 22, left: -280, width: 360, height: 144, far: true },
+  { file: 'Cloud-1.svg', top: 118, left: 200, width: 410, height: 157, far: false },
+  { file: 'Cloud.svg', top: 16, left: 836, width: 502, height: 201, far: false },
+  { file: 'Cloud-2.svg', top: 45, left: 1400, width: 310, height: 118, far: true },
+  { file: 'Cloud-1.svg', top: 65, left: 2000, width: 526, height: 201, far: false },
+  { file: 'Cloud.svg', top: 12, left: 2640, width: 340, height: 136, far: true },
+  { file: 'Cloud-2.svg', top: 135, left: 3020, width: 390, height: 149, far: false },
+  { file: 'Cloud-2.svg', top: 9, left: 3656, width: 526, height: 201, far: false },
+  { file: 'Cloud-1.svg', top: 88, left: 4250, width: 320, height: 122, far: true },
+  { file: 'Cloud.svg', top: 30, left: 4740, width: 410, height: 164, far: false },
+]
+
 // Positions follow the Anima frame; complete Figma exports replace its fragments.
 const artwork: Artwork[] = [
-  { file: 'Cloud.svg', top: 16, left: 836, width: 502, height: 201 },
-  { file: 'Cloud-1.svg', top: 65, left: 2000, width: 526, height: 201 },
-  { file: 'Cloud-2.svg', top: 9, left: 3656, width: 526, height: 201 },
   {
     file: 'Office.svg',
+    building: true,
     label: 'Office',
     fields: ['Workplace or office'],
     top: 359,
@@ -37,6 +50,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'Hospital.svg',
+    building: true,
     label: 'Hospital',
     fields: ['Health data'],
     top: 296,
@@ -46,6 +60,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'School.svg',
+    building: true,
     label: 'School',
     fields: ['School'],
     top: 186,
@@ -55,6 +70,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'Thall.svg',
+    building: true,
     label: 'Town hall',
     fields: ['Government ID or SSN', 'Citizenship or immigration status'],
     top: 129,
@@ -64,6 +80,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'House.svg',
+    building: true,
     label: 'Home',
     fields: ['Home address and street'],
     top: 443,
@@ -73,6 +90,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'Bank.svg',
+    building: true,
     label: 'Bank',
     fields: ['Payment and bank details'],
     top: 311,
@@ -203,7 +221,7 @@ function MapHotspot({
   return (
     <button
       type="button"
-      className="neighborhood-hotspot"
+      className={`neighborhood-hotspot${item.building ? ' neighborhood-building' : ''}`}
       style={{ ...absolute(item.top, item.left, item.width, item.height), '--artwork-layer': item.foreground ? 3 : 1 } as CSSProperties}
       aria-label={`${label} data exposure details`}
       aria-describedby={tooltipId}
@@ -257,6 +275,17 @@ export function NeighborhoodView({
   return (
     <>
       <div className="youville-scene" style={{ background: '#b3f0ff' }}>
+        {clouds.map((cloud, index) => (
+          <img
+            key={`cloud-${index}`}
+            className={`neighborhood-cloud${cloud.far ? ' neighborhood-cloud-far' : ''}`}
+            alt=""
+            aria-hidden="true"
+            src={`/youville/${cloud.file}`}
+            style={absolute(cloud.top, cloud.left, cloud.width, cloud.height)}
+            draggable={false}
+          />
+        ))}
         <div
           aria-hidden="true"
           style={{

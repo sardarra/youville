@@ -19,7 +19,7 @@ export function MyYouville({
     <section className="youville-view" aria-label="My Neighborhood">
       <p className="youville-scroll-hint" id="youville-scroll-hint">Swipe or use the bar below to explore the neighborhood. The illustration does not represent collected data or actual locations.</p>
       <div className="youville-viewport">
-      <div ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; setPosition(el.scrollLeft / Math.max(1, el.scrollWidth - el.clientWidth) * 100) }} className="youville-scroll" tabIndex={0} role="region" aria-label="Youville town preview" aria-describedby="youville-scroll-hint">
+      <div ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; el.style.setProperty('--cloud-near-offset', `${el.scrollLeft * 0.16}px`); el.style.setProperty('--cloud-far-offset', `${el.scrollLeft * 0.3}px`); setPosition(el.scrollLeft / Math.max(1, el.scrollWidth - el.clientWidth) * 100) }} className="youville-scroll" tabIndex={0} role="region" aria-label="Youville town preview" aria-describedby="youville-scroll-hint">
         <div className="youville-scene-space"><NeighborhoodView scans={scans} /></div>
       </div>
       <div className="youville-title-overlay">
