@@ -1,6 +1,5 @@
 import { useRef, useState } from 'react'
 import { NeighborhoodView } from '@/components/neighborhood-view'
-import type { Inference } from '@/lib/rules'
 import type { ScanResponse } from '@/lib/scan'
 import './my-youville.css'
 
@@ -8,12 +7,10 @@ export function MyYouville({
   name = 'You',
   company,
   scans,
-  inferences,
 }: {
   name?: string
   company?: string
   scans: ScanResponse[]
-  inferences: Inference[]
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(0)
@@ -23,7 +20,7 @@ export function MyYouville({
       <p className="youville-scroll-hint" id="youville-scroll-hint">Swipe or use the bar below to explore the neighborhood. The illustration does not represent collected data or actual locations.</p>
       <div className="youville-viewport">
       <div ref={scrollRef} onScroll={(event) => { const el = event.currentTarget; setPosition(el.scrollLeft / Math.max(1, el.scrollWidth - el.clientWidth) * 100) }} className="youville-scroll" tabIndex={0} role="region" aria-label="Youville town preview" aria-describedby="youville-scroll-hint">
-        <div className="youville-scene-space"><NeighborhoodView /></div>
+        <div className="youville-scene-space"><NeighborhoodView scans={scans} /></div>
       </div>
       <div className="youville-title-overlay">
         <h1>Welcome to {name}ville</h1>

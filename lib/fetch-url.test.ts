@@ -1,5 +1,9 @@
 import { describe, expect, it } from 'vitest'
-import { htmlToText, isBlockedAddress } from '@/lib/fetch-url'
+import {
+  htmlToText,
+  isBlockedAddress,
+  websiteNameFromHtml,
+} from '@/lib/fetch-url'
 
 describe('SSRF address guard', () => {
   it.each(['127.0.0.1', '10.10.1.2', '169.254.169.254', '::1', 'fc00::1', 'fe80::1'])(
@@ -24,5 +28,26 @@ describe('SSRF address guard', () => {
     `)
 
     expect(text).toBe('Privacy policy\nWe may collect your email address.')
+  })
+
+  it('uses the website name from page metadata or the policy title', () => {
+    expect(
+      websiteNameFromHtml(
+        '<meta property="og:site_name" content="Northstar"><title>Privacy Policy</title>',
+        'northstar.example',
+      ),
+    ).toBe('Northstar')
+    expect(
+      websiteNameFromHtml(
+        '<title>Privacy Policy | Acme</title>',
+        'acme.example',
+      ),
+    ).toBe('Acme')
+    expect(
+      websiteNameFromHtml('<title>Privacy Policy</title>', 'acme.example'),
+    ).toBe('acme.example')
+    expect(
+      websiteNameFromHtml('<title>Northstar</title>', 'northstar.example'),
+    ).toBe('Northstar')
   })
 })
