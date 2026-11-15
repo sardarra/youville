@@ -1,8 +1,9 @@
 'use client'
 
-import { useState, type CSSProperties } from 'react'
+import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ScanResponse } from '@/lib/scan'
 import type { FieldLabel } from '@/lib/taxonomy'
+import { placeBubble, type MapRect } from '@/lib/bubble-placement'
 
 type Artwork = {
   file: string
@@ -197,74 +198,37 @@ function getDisclosures(fields: readonly FieldLabel[], scans: ScanResponse[]) {
   )
 }
 
-function MapHotspot({
-  item,
-  disclosures,
-  expanded,
-  onClick,
-  onEscape,
-}: {
+function bubbleId(file: string) {
+  return `neighborhood-bubble-${file.replace(/[^a-zA-Z0-9_-]/g, '-')}`
+}
+
+function MapHotspot({ item, expanded, pinned, onClick, onEnter, onLeave, onEscape }: {
   item: Artwork
-  disclosures: Disclosure[]
   expanded: boolean
+  pinned: boolean
   onClick: () => void
+  onEnter: () => void
+  onLeave: () => void
   onEscape: () => void
 }) {
-  const label = item.label ?? 'Map location'
-  const tooltipId = `neighborhood-tooltip-${item.file.replace(
-    /[^a-zA-Z0-9_-]/g,
-    '-',
-  )}`
-  const edge =
-    item.left < 240
-      ? 'start'
-      : item.left + item.width > 4800
-        ? 'end'
-        : 'center'
-
   return (
     <button
       type="button"
       className={`neighborhood-hotspot${item.building ? ' neighborhood-building' : ''}`}
       style={{ ...absolute(item.top, item.left, item.width, item.height), '--artwork-layer': item.foreground ? 3 : 1 } as CSSProperties}
-      aria-label={`${label} data exposure details`}
-      aria-describedby={tooltipId}
-      aria-controls={tooltipId}
+      aria-label={`${item.label ?? 'Map location'} data exposure details`}
+      aria-controls={expanded ? bubbleId(item.file) : undefined}
       aria-expanded={expanded}
-      data-tooltip-edge={edge}
+      data-file={item.file}
+      aria-pressed={pinned}
+      onPointerEnter={(event) => { if (event.pointerType !== 'touch') onEnter() }}
+      onPointerLeave={onLeave}
+      onFocus={onEnter}
+      onBlur={onLeave}
       onClick={onClick}
-      onKeyDown={(event) => {
-        if (event.key === 'Escape') onEscape()
-      }}
+      onKeyDown={(event) => { if (event.key === 'Escape') onEscape() }}
     >
-      <img
-        className="neighborhood-artwork"
-        alt=""
-        src={`/youville/${encodeURIComponent(item.file)}`}
-        draggable={false}
-      />
-      <span className="neighborhood-tooltip" id={tooltipId} role="tooltip">
-        <strong>{label}</strong>
-        <span className="neighborhood-tooltip-note">
-          From saved policy scans; this does not confirm actual data sharing.
-        </span>
-        <span className="neighborhood-disclosures">
-          {disclosures.map((disclosure, index) => (
-            <span
-              className="neighborhood-disclosure"
-              key={`${disclosure.company}-${disclosure.field}-${index}`}
-            >
-              <strong>{disclosure.company}</strong>
-              <span>{disclosure.field}</span>
-              <small>
-                {disclosure.status === 'collected'
-                  ? 'Verified policy claim: collects this'
-                  : 'Could be inferred from policy data'}
-              </small>
-            </span>
-          ))}
-        </span>
-      </span>
+      <img className="neighborhood-artwork" alt="" src={`/youville/${encodeURIComponent(item.file)}`} draggable={false} />
     </button>
   )
 }
@@ -274,11 +238,120 @@ export function NeighborhoodView({
 }: {
   scans: ScanResponse[]
 }) {
-  const [activeHotspot, setActiveHotspot] = useState<string | null>(null)
+  const [pinned, setPinned] = useState<Set<string>>(() => new Set())
+  const [hovered, setHovered] = useState<string | null>(null)
+  const [width, setWidth] = useState(2200)
+  const [sceneHeight, setSceneHeight] = useState(400)
+  const [bubbleHeights, setBubbleHeights] = useState<Record<string, number>>({})
+  const sceneRef = useRef<HTMLDivElement>(null)
+  const bubbleRefs = useRef(new Map<string, HTMLElement>())
+  const stageRef = useRef<HTMLDivElement>(null)
+  const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
+  const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  const enter = (file: string) => { cancelLeave(); setHovered(file) }
+  const leave = () => { cancelLeave(); leaveTimer.current = setTimeout(() => setHovered(null), 220) }
+  const close = (file: string) => {
+    cancelLeave()
+    setHovered(null)
+    setPinned(current => { const next = new Set(current); next.delete(file); return next })
+  }
+  const toggle = (file: string) => {
+    cancelLeave()
+    setHovered(null)
+    setPinned(current => {
+      const next = new Set(current)
+      if (next.has(file)) next.delete(file)
+      else next.add(file)
+      return next
+    })
+  }
+  useEffect(() => {
+    const stage = stageRef.current
+    if (!stage) return
+    const measure = () => {
+      setWidth(stage.clientWidth)
+      if (sceneRef.current) setSceneHeight(sceneRef.current.clientHeight)
+    }
+    const observer = new ResizeObserver(measure)
+    observer.observe(stage)
+    if (sceneRef.current) observer.observe(sceneRef.current)
+    measure()
+    return () => { observer.disconnect(); if (leaveTimer.current) clearTimeout(leaveTimer.current) }
+  }, [])
+
+  const visibleItems = artwork.filter(item => item.fields && (pinned.has(item.file) || hovered === item.file))
+    .filter(item => getDisclosures(item.fields!, scans).length)
+  const visibleKey = visibleItems.map(item => item.file).join('|')
+  useEffect(() => {
+    const observer = new ResizeObserver(entries => {
+      setBubbleHeights(current => {
+        const next = { ...current }
+        let changed = false
+        for (const entry of entries) {
+          const key = (entry.target as HTMLElement).dataset.bubble!
+          const height = Math.ceil(entry.target.getBoundingClientRect().height)
+          if (next[key] !== height) { next[key] = height; changed = true }
+        }
+        return changed ? next : current
+      })
+    })
+    bubbleRefs.current.forEach(element => observer.observe(element))
+    return () => observer.disconnect()
+  }, [visibleKey])
+
+  const cardWidth = 360
+  const rectFor = (item: Artwork): MapRect => ({
+    left: item.left / 5042 * width, top: item.top / 1080 * sceneHeight,
+    width: item.width / 5042 * width, height: item.height / 1080 * sceneHeight,
+  })
+  // Protect every visible building, including its hover lift, not just the selected one.
+  const occupied: MapRect[] = artwork
+    .filter(item => item.building && item.fields && getDisclosures(item.fields, scans).length)
+    .map(item => { const rect = rectFor(item); return { ...rect, top: rect.top - 10, height: rect.height + 10 } })
+  const bubbles = visibleItems.map(item => {
+    const target = rectFor(item)
+    const height = bubbleHeights[item.file] ?? 160 + getDisclosures(item.fields!, scans).length * 120
+    const placement = placeBubble(target, cardWidth, height, width, [...occupied, target])
+    occupied.push(placement)
+    const side = placement.left + cardWidth / 2 >= target.left + target.width / 2 ? 'right' : 'left'
+    const anchorY = placement.top >= target.top + target.height ? target.top + target.height : target.top
+    return { item, ...placement, side, anchorY,
+      anchorX: side === 'right' ? target.left + target.width : target.left,
+      tailY: Math.max(28, Math.min(height - 28, anchorY - placement.top)) }
+  })
+  const extraHeight = Math.max(0, ...bubbles.map(bubble => bubble.top + bubble.height + 20 - sceneHeight))
+
 
   return (
-    <>
-      <div className="youville-scene" style={{ background: '#b3f0ff' }}>
+    <div className="neighborhood-stage" ref={stageRef} style={{ paddingBottom: extraHeight }}>
+      <div className="neighborhood-conversations">
+        <svg className="neighborhood-bubble-connectors" width="100%" height="100%" aria-hidden="true">
+          {bubbles.map(({ item, left, top, side, tailY, anchorX, anchorY }) => <line key={item.file} x1={anchorX} y1={anchorY} x2={side === 'right' ? left : left + cardWidth} y2={top + tailY} />)}
+        </svg>
+        {bubbles.map(({ item, left, top, side, tailY }) => (
+          <section key={item.file} id={bubbleId(item.file)}
+            ref={element => { if (element) bubbleRefs.current.set(item.file, element); else bubbleRefs.current.delete(item.file) }}
+            data-bubble={item.file} data-side={side}
+            className="neighborhood-bubble" aria-label={`${item.label} policy details`}
+            style={{ left, top, '--tail-top': `${tailY}px` } as CSSProperties}
+            onPointerEnter={cancelLeave} onPointerLeave={leave}
+            onFocus={cancelLeave} onBlur={leave}
+            onKeyDown={event => { if (event.key === 'Escape') { close(item.file) } }}>
+            <header><strong>{item.label}</strong><button type="button" onClick={() => close(item.file)} aria-label={`Close ${item.label} details`}>×</button></header>
+            <small>{pinned.has(item.file) ? 'Pinned · click building to dismiss' : 'Click building to keep open'}</small>
+            <div className="neighborhood-bubble-content">
+              {getDisclosures(item.fields!, scans).map((disclosure, index) => (
+                <div className="neighborhood-disclosure" key={index}>
+                  <strong>{disclosure.company}</strong><span>{disclosure.field}</span>
+                  <small>{disclosure.status === 'collected' ? 'Policy says it collects this' : 'Could be inferred from policy data'}</small>
+                </div>
+              ))}
+              <p>Policy claims, not confirmation of actual sharing.</p>
+            </div>
+          </section>
+        ))}
+      </div>
+      <div ref={sceneRef} className="youville-scene" style={{ background: '#b3f0ff' }}>
         {clouds.map((cloud, index) => (
           <img
             key={`cloud-${index}`}
@@ -327,19 +400,17 @@ export function NeighborhoodView({
             <MapHotspot
               key={item.file}
               item={item}
-              disclosures={disclosures}
-              expanded={activeHotspot === item.file}
-              onClick={() =>
-                setActiveHotspot((active) =>
-                  active === item.file ? null : item.file,
-                )
-              }
-              onEscape={() => setActiveHotspot(null)}
+              expanded={pinned.has(item.file) || hovered === item.file}
+              pinned={pinned.has(item.file)}
+              onClick={() => toggle(item.file)}
+              onEnter={() => enter(item.file)}
+              onLeave={leave}
+              onEscape={() => close(item.file)}
             />
           )
         })}
       </div>
 
-    </>
+    </div>
   )
 }

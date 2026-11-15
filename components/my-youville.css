@@ -12,12 +12,6 @@
 .neighborhood-hotspot:hover, .neighborhood-hotspot[aria-expanded="true"] { z-index: 4; }
 .neighborhood-hotspot:focus-visible { z-index: 4; outline: 5px solid #fff; outline-offset: -8px; border-radius: 12px; }
 .neighborhood-artwork { display: block; width: 100%; height: 100%; object-fit: fill; pointer-events: none; }
-.neighborhood-tooltip { position: absolute; top: 0; left: 50%; z-index: 10; display: flex; visibility: hidden; flex-direction: column; gap: 9px; width: 380px; max-width: 82vw; padding: 15px; transform: translateX(-50%); border: 1px solid #dfe4d9; border-radius: 10px; background: #fff; box-shadow: 0 8px 24px #17201430; color: #20231f; font: 16px/1.35 Helvetica, Arial, sans-serif; text-align: left; opacity: 0; transition: opacity .12s, visibility .12s; pointer-events: auto; }
-.neighborhood-hotspot:hover .neighborhood-tooltip, .neighborhood-hotspot:focus-visible .neighborhood-tooltip, .neighborhood-hotspot[aria-expanded="true"] .neighborhood-tooltip { visibility: visible; opacity: 1; }
-.neighborhood-hotspot[data-tooltip-edge="start"] .neighborhood-tooltip { left: 0; transform: none; }
-.neighborhood-hotspot[data-tooltip-edge="end"] .neighborhood-tooltip { right: 0; left: auto; transform: none; }
-.neighborhood-tooltip > strong { font-size: 19px; }
-.neighborhood-tooltip-note { color: #777c73; font-size: 12px; }
 .neighborhood-disclosures { display: grid; gap: 6px; }
 .neighborhood-disclosure { display: flex; flex-direction: column; gap: 3px; padding: 8px 10px; border: 1px solid #e8ebe4; border-radius: 6px; background: #f7f8f5; }
 .neighborhood-disclosure > strong { font-size: 15px; }
@@ -73,3 +67,35 @@
 }
 /* Keep the sky, town and summary shortcut together in the first viewport. */
 .youville-scene { height: clamp(300px, calc(100svh - 340px), 620px); }
+
+.neighborhood-stage { position: relative; }
+.neighborhood-conversations { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
+.neighborhood-bubble {
+  position: absolute; z-index: 6; box-sizing: border-box; width: 360px; height: auto; pointer-events: auto;
+  padding: 20px; border: 2px solid #68805c; border-radius: 20px;
+  background: #fffff8; color: #263523; box-shadow: 0 5px 0 #68805c22;
+  display: flex; flex-direction: column; gap: 6px; text-align: left;
+}
+.neighborhood-bubble::after {
+  content: ''; position: absolute; top: var(--tail-top); left: -9px;
+  width: 14px; height: 14px; background: #fffff8;
+  border-left: 2px solid #68805c; border-bottom: 2px solid #68805c; transform: translateY(-50%) rotate(45deg);
+}
+.neighborhood-bubble header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
+.neighborhood-bubble header strong { font-size: 18px; }
+.neighborhood-bubble header button { border: 0; background: #eaf0e4; color: #354434; border-radius: 50%; width: 26px; height: 26px; font-size: 20px; }
+.neighborhood-bubble > small { font-size: 11px; color: #617358; }
+.neighborhood-bubble-content { display: grid; gap: 10px; }
+.neighborhood-bubble-content p { font-size: 11px; margin: 2px 0; color: #617358; }
+.neighborhood-hotspot[aria-pressed="true"] .neighborhood-artwork { filter: drop-shadow(0 0 5px #ffffc6); }
+
+.neighborhood-bubble-connectors { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
+.neighborhood-bubble-connectors line { stroke: #68805c; stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .65; }
+
+.neighborhood-bubble[data-side="left"]::after { left: auto; right: -9px; transform: translateY(-50%) rotate(225deg); }
+.neighborhood-bubble header strong { font-size: 21px; }
+.neighborhood-bubble .neighborhood-disclosure { padding: 12px; gap: 5px; }
+.neighborhood-bubble .neighborhood-disclosure > strong { font-size: 16px; }
+.neighborhood-bubble .neighborhood-disclosure > span { font-size: 15px; }
+.neighborhood-bubble .neighborhood-disclosure > small,
+.neighborhood-bubble > small, .neighborhood-bubble-content p { font-size: 13px; line-height: 1.5; }
