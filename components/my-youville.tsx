@@ -1,4 +1,4 @@
-import { useRef, useState } from 'react'
+import { useEffect, useRef, useState } from 'react'
 import { NeighborhoodView } from '@/components/neighborhood-view'
 import type { ScanResponse } from '@/lib/scan'
 import './my-youville.css'
@@ -13,7 +13,18 @@ export function MyYouville({
   scans: ScanResponse[]
 }) {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const titleRef = useRef<HTMLDivElement>(null)
   const [position, setPosition] = useState(0)
+
+  useEffect(() => {
+    const title = titleRef.current
+    if (!title) return
+    const measure = () => scrollRef.current?.style.setProperty('--cloud-top', `${title.offsetTop + title.offsetHeight + 14}px`)
+    const observer = new ResizeObserver(measure)
+    observer.observe(title)
+    measure()
+    return () => observer.disconnect()
+  }, [])
 
   return (
     <section className="youville-view" aria-label="My Neighborhood">
@@ -23,7 +34,7 @@ export function MyYouville({
         <div className="youville-scene-space"><NeighborhoodView scans={scans} /></div>
       </div>
       <a className="button-primary neighborhood-summary-link" href="#privacy-summary">View privacy summary <span aria-hidden="true">↓</span></a>
-      <div className="youville-title-overlay">
+      <div ref={titleRef} className="youville-title-overlay">
         <h1>Welcome to {name}ville</h1>
         <p>Viewing policy for: {company ?? (scans.length ? 'all saved policies' : 'no policies scanned')}</p>
       </div>

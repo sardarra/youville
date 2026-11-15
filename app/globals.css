@@ -115,3 +115,18 @@
 .score-ring strong { color: var(--score-color, #16a34a); }
 .privacy-summary :is(.finding-card h4, .group-heading h3, .field-tile b, .panel-tabs button, .verified-summary b, .removed-box b) { font-size: 16px; line-height: 1.5; }
 .privacy-summary :is(.source-count, .source-tip, .category-tag, .severity, .verified-badge, .jump-link, .inferred-label, .reason-popover, .profile-badge, .could-status, .map-stepper button) { font-size: 13px; line-height: 1.5; }
+
+/* Strong contrast for dividers and copy directly on the blue page. */
+.privacy-summary, .site-footer { border-top-color: #000; }
+.app-shell :is(
+  .ledger-heading > .section-kicker, .ledger-heading > p,
+  .results-title-row p, .back-link,
+  .scan-intro p, .eyebrow, .sample-heading .section-kicker, .sample-note,
+  .try-sample, .try-sample:hover,
+  .top-meta, .main-nav button, .help-button,
+  .site-footer, .site-footer b, .footer-dot
+) { color: #000; }
+.scan-page > .method-note,
+.scan-page > .method-note b,
+.privacy-summary > .method-note,
+.privacy-summary > .method-note b { color: #000; }
