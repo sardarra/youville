@@ -129,7 +129,6 @@ const artwork: Artwork[] = [
   { file: 'Lamppost-1.svg', top: 393, left: 3766, width: 306, height: 294 },
   { file: 'Lamppost-2.svg', top: 393, left: 4704, width: 306, height: 294 },
   { file: 'Bench.svg', foreground: true, top: 750, left: 1411, width: 246, height: 109 },
-  { file: 'Bench-1.svg', foreground: true, top: 790, left: 361, width: 246, height: 109 },
   { file: 'Bench-2.svg', foreground: true, top: 805, left: 3326, width: 246, height: 109 },
   {
     file: 'Fountain.svg', foreground: true,
