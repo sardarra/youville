@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState, type CSSProperties } from 'react'
 import type { ScanResponse } from '@/lib/scan'
 import type { FieldLabel } from '@/lib/taxonomy'
-import { placeBubble, type MapRect } from '@/lib/bubble-placement'
+import { bubblePreset } from '@/lib/bubble-presets'
 
 type Artwork = {
   file: string
@@ -13,6 +13,7 @@ type Artwork = {
   left: number
   width: number
   height: number
+  parts?: Artwork[]
   building?: boolean
   foreground?: boolean
 }
@@ -43,7 +44,7 @@ const clouds = [
 ]
 
 // Positions follow the Anima frame; complete Figma exports replace its fragments.
-const artwork: Artwork[] = [
+const sceneArtwork: Artwork[] = [
   {
     file: 'Office.svg',
     building: true,
@@ -169,6 +170,19 @@ const artwork: Artwork[] = [
   },
 ]
 
+const parkFiles = new Set(['Asiangirl.svg', 'Pinkshirtperson.svg', 'redshirtboy.svg', 'Fountain.svg', 'Fountaion.svg', 'Bench.svg'])
+const artwork: Artwork[] = [
+  ...sceneArtwork.filter(item => !parkFiles.has(item.file)),
+  {
+    file: 'park', label: 'Park', foreground: true,
+    fields: ['Family and relatives', 'Social circle'],
+    top: 720, left: 1182, width: 697, height: 287,
+    parts: sceneArtwork.filter(item => parkFiles.has(item.file)),
+  },
+]
+
+const SKY_HEIGHT = 200
+
 const absolute = (
   top: number,
   left: number,
@@ -176,10 +190,10 @@ const absolute = (
   height: number,
 ): CSSProperties => ({
   position: 'absolute',
-  top: `${top / 1080 * 100}%`,
+  top: `calc(${top / 1080 * 100}% + ${SKY_HEIGHT * (1 - top / 1080)}px)`,
   left: `${left / 5042 * 100}%`,
   width: `${width / 5042 * 100}%`,
-  height: `${height / 1080 * 100}%`,
+  height: `calc(${height / 1080 * 100}% - ${SKY_HEIGHT * height / 1080}px)`,
 })
 
 function getDisclosures(fields: readonly FieldLabel[], scans: ScanResponse[]) {
@@ -214,7 +228,7 @@ function MapHotspot({ item, expanded, pinned, onClick, onEnter, onLeave, onEscap
   return (
     <button
       type="button"
-      className={`neighborhood-hotspot${item.building ? ' neighborhood-building' : ''}`}
+      className={`neighborhood-hotspot${item.building ? ' neighborhood-building' : ''}${item.parts ? ' neighborhood-park' : ''}`}
       style={{ ...absolute(item.top, item.left, item.width, item.height), '--artwork-layer': item.foreground ? 3 : 1 } as CSSProperties}
       aria-label={`${item.label ?? 'Map location'} data exposure details`}
       aria-controls={expanded ? bubbleId(item.file) : undefined}
@@ -228,7 +242,12 @@ function MapHotspot({ item, expanded, pinned, onClick, onEnter, onLeave, onEscap
       onClick={onClick}
       onKeyDown={(event) => { if (event.key === 'Escape') onEscape() }}
     >
-      <img className="neighborhood-artwork" alt="" src={`/youville/${encodeURIComponent(item.file)}`} draggable={false} />
+      {item.parts ? item.parts.map(part => (
+        <img key={part.file} className="neighborhood-artwork park-artwork" alt=""
+          src={`/youville/${encodeURIComponent(part.file)}`} draggable={false}
+          style={{ position: 'absolute', left: `${(part.left - item.left) / item.width * 100}%`,
+            top: `${(part.top - item.top) / item.height * 100}%`, width: `${part.width / item.width * 100}%`, height: `${part.height / item.height * 100}%` }} />
+      )) : <img className="neighborhood-artwork" alt="" src={`/youville/${encodeURIComponent(item.file)}`} draggable={false} />}
     </button>
   )
 }
@@ -242,9 +261,7 @@ export function NeighborhoodView({
   const [hovered, setHovered] = useState<string | null>(null)
   const [width, setWidth] = useState(2200)
   const [sceneHeight, setSceneHeight] = useState(400)
-  const [bubbleHeights, setBubbleHeights] = useState<Record<string, number>>({})
   const sceneRef = useRef<HTMLDivElement>(null)
-  const bubbleRefs = useRef(new Map<string, HTMLElement>())
   const stageRef = useRef<HTMLDivElement>(null)
   const leaveTimer = useRef<ReturnType<typeof setTimeout> | null>(null)
   const cancelLeave = () => { if (leaveTimer.current) clearTimeout(leaveTimer.current) }
@@ -281,64 +298,43 @@ export function NeighborhoodView({
 
   const visibleItems = artwork.filter(item => item.fields && (pinned.has(item.file) || hovered === item.file))
     .filter(item => getDisclosures(item.fields!, scans).length)
-  const visibleKey = visibleItems.map(item => item.file).join('|')
-  useEffect(() => {
-    const observer = new ResizeObserver(entries => {
-      setBubbleHeights(current => {
-        const next = { ...current }
-        let changed = false
-        for (const entry of entries) {
-          const key = (entry.target as HTMLElement).dataset.bubble!
-          const height = Math.ceil(entry.target.getBoundingClientRect().height)
-          if (next[key] !== height) { next[key] = height; changed = true }
-        }
-        return changed ? next : current
-      })
+    .sort((a, b) => {
+      const priority = (file: string) => file === hovered ? Infinity : [...pinned].indexOf(file)
+      return priority(b.file) - priority(a.file)
     })
-    bubbleRefs.current.forEach(element => observer.observe(element))
-    return () => observer.disconnect()
-  }, [visibleKey])
-
-  const cardWidth = 360
-  const rectFor = (item: Artwork): MapRect => ({
-    left: item.left / 5042 * width, top: item.top / 1080 * sceneHeight,
-    width: item.width / 5042 * width, height: item.height / 1080 * sceneHeight,
-  })
-  // Protect every visible building, including its hover lift, not just the selected one.
-  const occupied: MapRect[] = artwork
-    .filter(item => item.building && item.fields && getDisclosures(item.fields, scans).length)
-    .map(item => { const rect = rectFor(item); return { ...rect, top: rect.top - 10, height: rect.height + 10 } })
+  const cardWidth = 340
   const bubbles = visibleItems.map(item => {
-    const target = rectFor(item)
-    const height = bubbleHeights[item.file] ?? 160 + getDisclosures(item.fields!, scans).length * 120
-    const placement = placeBubble(target, cardWidth, height, width, [...occupied, target])
-    occupied.push(placement)
-    const side = placement.left + cardWidth / 2 >= target.left + target.width / 2 ? 'right' : 'left'
-    const anchorY = placement.top >= target.top + target.height ? target.top + target.height : target.top
-    return { item, ...placement, side, anchorY,
-      anchorX: side === 'right' ? target.left + target.width : target.left,
-      tailY: Math.max(28, Math.min(height - 28, anchorY - placement.top)) }
+    const placement = bubblePreset(item.file, width, sceneHeight)
+    const anchorX = (item.left + item.width / 2) / 5042 * width
+    const anchorY = SKY_HEIGHT + item.top / 1080 * (sceneHeight - SKY_HEIGHT)
+    const side = placement.left + cardWidth / 2 >= anchorX ? 'right' : 'left'
+    return { item, ...placement, side, anchorX, anchorY,
+      tailY: Math.max(28, Math.min(placement.height - 28, anchorY - placement.top)) }
   })
-  const extraHeight = Math.max(0, ...bubbles.map(bubble => bubble.top + bubble.height + 20 - sceneHeight))
+
 
 
   return (
-    <div className="neighborhood-stage" ref={stageRef} style={{ paddingBottom: extraHeight }}>
+    <div className="neighborhood-stage" ref={stageRef}>
       <div className="neighborhood-conversations">
         <svg className="neighborhood-bubble-connectors" width="100%" height="100%" aria-hidden="true">
-          {bubbles.map(({ item, left, top, side, tailY, anchorX, anchorY }) => <line key={item.file} x1={anchorX} y1={anchorY} x2={side === 'right' ? left : left + cardWidth} y2={top + tailY} />)}
+          {bubbles.map(({ item, left, top, side, tailY, anchorX, anchorY }) => {
+            const edgeX = side === 'right' ? left + 2 : left + cardWidth - 2
+            const edgeY = top + tailY
+            return <path key={item.file} className="neighborhood-speech-tail"
+              d={`M ${edgeX} ${edgeY - 13} Q ${(edgeX + anchorX) / 2} ${edgeY} ${anchorX} ${anchorY} Q ${(edgeX + anchorX) / 2} ${edgeY + 16} ${edgeX} ${edgeY + 13} Z`} />
+          })}
         </svg>
-        {bubbles.map(({ item, left, top, side, tailY }) => (
+        {bubbles.map(({ item, left, top, side, tailY, height }) => (
           <section key={item.file} id={bubbleId(item.file)}
-            ref={element => { if (element) bubbleRefs.current.set(item.file, element); else bubbleRefs.current.delete(item.file) }}
             data-bubble={item.file} data-side={side}
             className="neighborhood-bubble" aria-label={`${item.label} policy details`}
-            style={{ left, top, '--tail-top': `${tailY}px` } as CSSProperties}
+            style={{ left, top, width: cardWidth, height, maxHeight: height, '--tail-top': `${tailY}px` } as CSSProperties}
             onPointerEnter={cancelLeave} onPointerLeave={leave}
             onFocus={cancelLeave} onBlur={leave}
             onKeyDown={event => { if (event.key === 'Escape') { close(item.file) } }}>
             <header><strong>{item.label}</strong><button type="button" onClick={() => close(item.file)} aria-label={`Close ${item.label} details`}>×</button></header>
-            <small>{pinned.has(item.file) ? 'Pinned · click building to dismiss' : 'Click building to keep open'}</small>
+            <small>{pinned.has(item.file) ? 'Pinned · click again to dismiss' : 'Click to keep this conversation open'}</small>
             <div className="neighborhood-bubble-content">
               {getDisclosures(item.fields!, scans).map((disclosure, index) => (
                 <div className="neighborhood-disclosure" key={index}>
@@ -359,7 +355,7 @@ export function NeighborhoodView({
             alt=""
             aria-hidden="true"
             src={`/youville/${cloud.file}`}
-            style={absolute(cloud.top, cloud.left, cloud.width, cloud.height)}
+            style={{ position: 'absolute', top: `calc(var(--cloud-top, 125px) + ${cloud.top * 0.48}px)`, left: `${cloud.left / 5042 * 100}%`, width: `${cloud.width / 5042 * 100}%`, height: cloud.height * 0.55 }}
             draggable={false}
           />
         ))}
@@ -400,7 +396,7 @@ export function NeighborhoodView({
             <MapHotspot
               key={item.file}
               item={item}
-              expanded={pinned.has(item.file) || hovered === item.file}
+              expanded={bubbles.some(bubble => bubble.item.file === item.file)}
               pinned={pinned.has(item.file)}
               onClick={() => toggle(item.file)}
               onEnter={() => enter(item.file)}

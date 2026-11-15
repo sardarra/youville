@@ -3,8 +3,8 @@ import type { Metadata, Viewport } from 'next'
 import './globals.css'
 
 export const metadata: Metadata = {
-  title: 'T&C X-ray — Privacy, in plain sight',
-  description: 'See what app terms collect, what they could reveal, and who gets a copy.',
+  title: 'Youville — Your Privacy Neighborhood',
+  description: 'Explore what privacy policies collect and reveal about you in an interactive neighborhood.',
   generator: 'v0.app',
   icons: {
     icon: [

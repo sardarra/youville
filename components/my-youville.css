@@ -3,8 +3,8 @@
 .youville-viewport { position: relative; }
 .youville-scroll { user-select: none; -webkit-user-select: none; width: 100%; overflow-x: auto; overscroll-behavior-x: contain; }
 .youville-scroll:focus-visible { outline: 3px solid #64745d; outline-offset: -3px; }
-.youville-scene-space { position: relative; width: 220%; min-width: 2200px; padding-top: 100px; }
-.youville-scene { position: relative; overflow: hidden; width: 100%; height: clamp(360px, calc(100svh - 210px), 740px); }
+.youville-scene-space { position: relative; width: 220%; min-width: 2200px; }
+.youville-scene { position: relative; overflow: hidden; width: 100%; height: clamp(600px, 76svh, 740px); }
 .youville-title-overlay { z-index: 4; pointer-events: none; position: absolute; top: 26px; left: 24px; right: 24px; }
 .youville-title-overlay h1 { margin: 0; color: #233724; font: 500 clamp(28px, 3.5vw, 46px)/1.1 Helvetica, Arial, sans-serif; letter-spacing: -2px; }
 .youville-title-overlay p { margin: 10px 0 0; color: #354434; font-size: 14px; }
@@ -65,21 +65,15 @@
   padding: 14px 22px; font-size: 16px; border-radius: 999px;
   box-shadow: 0 4px 16px #23372430;
 }
-/* Keep the sky, town and summary shortcut together in the first viewport. */
-.youville-scene { height: clamp(300px, calc(100svh - 340px), 620px); }
+/* Scene height stays stable as conversations open and close. */
 
-.neighborhood-stage { position: relative; }
+.neighborhood-stage { position: relative; background: #00af0f; overflow: hidden; }
 .neighborhood-conversations { position: absolute; inset: 0; pointer-events: none; z-index: 6; }
 .neighborhood-bubble {
   position: absolute; z-index: 6; box-sizing: border-box; width: 360px; height: auto; pointer-events: auto;
-  padding: 20px; border: 2px solid #68805c; border-radius: 20px;
-  background: #fffff8; color: #263523; box-shadow: 0 5px 0 #68805c22;
+  padding: 22px; border: 0; border-radius: 24px;
+  background: #fffef8; color: #263523; box-shadow: 0 10px 28px #20391e18, 0 2px 5px #20391e0a;
   display: flex; flex-direction: column; gap: 6px; text-align: left;
-}
-.neighborhood-bubble::after {
-  content: ''; position: absolute; top: var(--tail-top); left: -9px;
-  width: 14px; height: 14px; background: #fffff8;
-  border-left: 2px solid #68805c; border-bottom: 2px solid #68805c; transform: translateY(-50%) rotate(45deg);
 }
 .neighborhood-bubble header { display: flex; align-items: center; justify-content: space-between; gap: 8px; }
 .neighborhood-bubble header strong { font-size: 18px; }
@@ -90,12 +84,28 @@
 .neighborhood-hotspot[aria-pressed="true"] .neighborhood-artwork { filter: drop-shadow(0 0 5px #ffffc6); }
 
 .neighborhood-bubble-connectors { position: absolute; inset: 0; pointer-events: none; z-index: 0; }
-.neighborhood-bubble-connectors line { stroke: #68805c; stroke-width: 1.5; stroke-dasharray: 4 5; opacity: .65; }
 
-.neighborhood-bubble[data-side="left"]::after { left: auto; right: -9px; transform: translateY(-50%) rotate(225deg); }
 .neighborhood-bubble header strong { font-size: 21px; }
 .neighborhood-bubble .neighborhood-disclosure { padding: 12px; gap: 5px; }
 .neighborhood-bubble .neighborhood-disclosure > strong { font-size: 16px; }
 .neighborhood-bubble .neighborhood-disclosure > span { font-size: 15px; }
 .neighborhood-bubble .neighborhood-disclosure > small,
 .neighborhood-bubble > small, .neighborhood-bubble-content p { font-size: 13px; line-height: 1.5; }
+
+.neighborhood-bubble-content { min-height: 0; overflow-y: auto; }
+
+.neighborhood-speech-tail { fill: #fffef8; stroke: none; stroke-linejoin: round; }
+.neighborhood-bubble header { padding-bottom: 10px; border-bottom: 1px solid #e3e8db; }
+.neighborhood-bubble header strong { letter-spacing: -.5px; }
+.neighborhood-bubble header button { width: 30px; height: 30px; transition: background .15s; }
+.neighborhood-bubble header button:hover { background: #d8e5cc; }
+.neighborhood-bubble .neighborhood-disclosure { background: #f2f6ed; border: 0; border-radius: 12px; }
+.neighborhood-bubble .neighborhood-disclosure > small { color: #536b47; }
+.neighborhood-park { border-radius: 45%; }
+.neighborhood-park .park-artwork { transition: filter .2s, transform .2s; }
+.neighborhood-park:hover .park-artwork,
+.neighborhood-park:focus-visible .park-artwork,
+.neighborhood-park[aria-pressed="true"] .park-artwork { filter: drop-shadow(0 0 6px #fff9b0); transform: translateY(-3px); }
+@media (prefers-reduced-motion: reduce) {
+  .neighborhood-park .park-artwork { transition: none; transform: none !important; }
+}
