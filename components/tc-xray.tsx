@@ -1286,7 +1286,7 @@ function LedgerPage({
 }) {
   return (
     <main className="ledger-page">
-      <MyYouville scans={scans} inferences={inferences} />
+      <MyYouville scans={scans} />
       <div className="ledger-heading">
         <span className="section-kicker">YOUR PRIVACY, ACROSS POLICIES</span>
         <h1>Exposure ledger</h1>
