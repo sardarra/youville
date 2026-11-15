@@ -46,7 +46,7 @@ const artwork: Artwork[] = [
   {
     file: 'Office.svg',
     building: true,
-    label: 'Office',
+    label: 'Company',
     fields: ['Workplace or office'],
     top: 359,
     left: 303,
@@ -56,7 +56,7 @@ const artwork: Artwork[] = [
   {
     file: 'Hospital.svg',
     building: true,
-    label: 'Hospital',
+    label: 'Health Information',
     fields: ['Health data'],
     top: 296,
     left: 2464,
@@ -66,7 +66,7 @@ const artwork: Artwork[] = [
   {
     file: 'School.svg',
     building: true,
-    label: 'School',
+    label: 'School or College',
     fields: ['School'],
     top: 186,
     left: 1519,
@@ -76,7 +76,7 @@ const artwork: Artwork[] = [
   {
     file: 'Thall.svg',
     building: true,
-    label: 'Town hall',
+    label: 'Government Information',
     fields: ['Government ID or SSN', 'Citizenship or immigration status'],
     top: 129,
     left: 3182,
@@ -96,7 +96,7 @@ const artwork: Artwork[] = [
   {
     file: 'Bank.svg',
     building: true,
-    label: 'Bank',
+    label: 'Financial Information',
     fields: ['Payment and bank details'],
     top: 311,
     left: 4135,
@@ -109,7 +109,7 @@ const artwork: Artwork[] = [
   { file: 'Tree-2.svg', top: 485, left: 2172, width: 156, height: 196 },
   {
     file: 'Street Sign.svg',
-    label: 'Youstreet street sign',
+    label: 'Street Address',
     fields: ['Home address and street'],
     top: 467,
     left: 10,
@@ -142,7 +142,7 @@ const artwork: Artwork[] = [
   { file: 'Fountaion.svg', foreground: true, top: 720, left: 1312, width: 453, height: 196 },
   {
     file: 'Asiangirl.svg', foreground: true,
-    label: 'Person beside the fountain',
+    label: 'Family and Friends',
     fields: ['Family and relatives', 'Social circle'],
     top: 751,
     left: 1182,
@@ -151,7 +151,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'Pinkshirtperson.svg', foreground: true,
-    label: 'Person in pink shirt',
+    label: 'Family and Friends',
     fields: ['Family and relatives', 'Social circle'],
     top: 727,
     left: 1269,
@@ -160,7 +160,7 @@ const artwork: Artwork[] = [
   },
   {
     file: 'redshirtboy.svg', foreground: true,
-    label: 'Person in red shirt',
+    label: 'Family and Friends',
     fields: ['Family and relatives', 'Social circle'],
     top: 748,
     left: 1726,
