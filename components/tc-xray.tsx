@@ -2,6 +2,7 @@
 
 import { useEffect, useMemo, useState } from 'react'
 import type { CSSProperties, FormEvent, ReactNode } from 'react'
+import { Button } from '@fluentui/react-components'
 import {
   ArrowDown,
   ArrowLeft,
@@ -535,14 +536,15 @@ function PastePolicyForm({
         <span>
           <FileText size={14} /> Scans are saved in this browser only
         </span>
-        <button
-          className="button-primary"
+        <Button
+          appearance="primary"
+          className="button-primary fluent-primary"
           onClick={() => void onSubmit()}
           disabled={!text.trim() || loading}
         >
           {loading ? 'Scanning…' : 'Explore my neighborhood'}
           {!loading && <ArrowRight size={16} />}
-        </button>
+        </Button>
       </div>
     </>
   )
@@ -579,14 +581,15 @@ function UrlPolicyForm({
           <FileText size={14} /> Pages that need JavaScript can be pasted
           instead
         </span>
-        <button
-          className="button-primary"
+        <Button
+          appearance="primary"
+          className="button-primary fluent-primary"
           onClick={() => void onSubmit()}
           disabled={!isPolicyUrlValid || loading}
         >
           {loading ? 'Scanning…' : 'Explore my neighborhood'}
           {!loading && <ArrowRight size={16} />}
-        </button>
+        </Button>
       </div>
     </>
   )
