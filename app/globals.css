@@ -22,8 +22,8 @@
 .app-shell-neighborhood { background: var(--paper); }
 .scan-page { max-width: 850px; padding-top: 45px; }
 .scan-intro { text-align: center; justify-content: center; margin: 10px 0 38px; }
-.scan-intro h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -1.7px; }
-.landing-wordmark { display: block; font-size: clamp(64px, 10vw, 100px); font-weight: 800; letter-spacing: -6px; margin-bottom: 16px; color: var(--green-dark); }
+.scan-intro h1 { font-size: clamp(30px, 4vw, 46px); letter-spacing: -1.7px; display: flex; flex-wrap: wrap; align-items: center; justify-content: center; gap: 20px; }
+.landing-wordmark { display: block; font-size: clamp(64px, 10vw, 100px); font-weight: 800; letter-spacing: -6px; margin: 0; color: var(--green-dark); }
 .scan-intro h1 em { display: block; font-style: normal; }
 .scan-intro p { margin: 20px auto 0; max-width: 460px; }
 .scan-visual-link { margin: 18px auto 0; }
