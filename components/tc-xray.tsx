@@ -417,13 +417,12 @@ function ScanPage({
 function ScanIntroduction() {
   return (
     <section className="scan-intro">
-      <div>
+      <div className="scan-intro-copy">
         <h1>
-          {/** logo should be centered and a bit smaller */}
-          <span className="landing-wordmark"><img src={logo.src} alt="Youville" style={{ 
-            display: 'block', 
-            margin: '0 auto', 
-            maxWidth: '240px' 
+          <span className="landing-wordmark"><img src={logo.src} alt="Youville" style={{
+            display: 'block',
+            margin: '0 auto',
+            maxWidth: '240px',
           }} /></span>
           <em>What companies can see about you</em>
         </h1>
@@ -431,7 +430,11 @@ function ScanIntroduction() {
           A little town, a bigger picture of your privacy.
           Paste a policy to discover what it could reveal about you.
         </p>
-
+      </div>
+      <div className="scan-intro-art" aria-hidden="true">
+        <img className="scan-intro-cloud" src="/youville/Cloud-1.svg" alt="" />
+        <img className="scan-intro-person scan-intro-person-one" src="/youville/Asiangirl.svg" alt="" />
+        <img className="scan-intro-person scan-intro-person-two" src="/youville/Pinkshirtperson.svg" alt="" />
       </div>
     </section>
   )

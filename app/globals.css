@@ -484,25 +484,123 @@
   font-family: "Segoe UI Variable", "Segoe UI", system-ui, sans-serif !important;
 }
 
+/* Compact landing composition with small, decorative Youville characters. */
+.scan-page {
+  width: min(100% - 48px, 900px);
+  padding: 32px 0 48px;
+}
+
+.scan-intro {
+  position: relative;
+  min-height: 170px;
+  align-items: center;
+  margin: 0 auto 20px;
+}
+
+.scan-intro-copy {
+  position: relative;
+  z-index: 1;
+  width: 100%;
+}
+
+.scan-intro h1 {
+  font-size: clamp(32px, 4.2vw, 46px);
+}
+
+.scan-intro h1 em {
+  margin-top: 8px;
+  font-size: clamp(20px, 2.5vw, 27px);
+}
+
+.scan-intro p {
+  max-width: 470px;
+  margin-top: 10px;
+  font-size: 14px;
+}
+
+.landing-wordmark img {
+  width: min(180px, 48vw);
+  filter: brightness(0) saturate(100%);
+}
+
+.scan-intro-art {
+  position: absolute;
+  right: 2%;
+  bottom: 3px;
+  width: 195px;
+  height: 110px;
+  pointer-events: none;
+}
+
+.scan-intro-cloud {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 125px;
+  height: auto;
+}
+
+.scan-intro-person {
+  position: absolute;
+  bottom: 0;
+  width: 42px;
+  height: 65px;
+  object-fit: contain;
+}
+
+.scan-intro-person-one { right: 71px; }
+.scan-intro-person-two { right: 28px; height: 61px; }
+
+.name-field {
+  max-width: 420px;
+  margin-bottom: 14px;
+}
+
+.name-field label { margin-bottom: 6px; }
+.name-field input { min-height: 38px; }
+
+.scan-box { padding: 16px 20px 12px; }
+.scan-mode-tabs { margin: -2px 0 14px; }
+.scan-mode-tabs button { min-height: 34px; }
+.scan-box textarea { min-height: 108px; }
+.scan-box-bottom { margin-top: 10px; }
+.sample-heading { margin: 22px 0 10px; }
+.sample-entry { padding: 8px; }
+.sample-card { min-height: 58px; padding: 10px; }
+.sample-grid { gap: 8px; }
+.scan-page > .method-note { margin-top: 16px; padding: 10px 12px; }
+
 @media (max-width: 600px) {
   .scan-page {
     width: min(100% - 32px, 900px);
-    padding: 46px 0 60px;
+    padding: 24px 0 42px;
   }
 
   .scan-intro {
+    min-height: 0;
+    margin-bottom: 16px;
     text-align: left;
   }
 
-  .scan-intro p {
-    margin-inline: 0;
+  .scan-intro-copy { padding-right: 4px; }
+  .scan-intro h1 { font-size: 33px; }
+  .scan-intro h1 em { max-width: 340px; font-size: 22px; }
+  .scan-intro p { max-width: 355px; margin-inline: 0; font-size: 13px; }
+
+  .scan-intro-art {
+    right: 0;
+    bottom: -13px;
+    width: 100px;
+    height: 64px;
+    opacity: .9;
   }
 
-  .scan-box {
-    padding: 18px;
-  }
-
-  .scan-box-bottom {
-    align-items: stretch;
-  }
+  .scan-intro-cloud { width: 74px; }
+  .scan-intro-person { width: 27px; height: 43px; }
+  .scan-intro-person-one { right: 36px; }
+  .scan-intro-person-two { right: 8px; height: 40px; }
+  .scan-box { padding: 14px; }
+  .scan-box textarea { min-height: 96px; }
+  .scan-box-bottom { align-items: stretch; }
+  .sample-heading { margin-top: 20px; }
 }
