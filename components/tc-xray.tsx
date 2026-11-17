@@ -272,7 +272,17 @@ export function TcXray() {
         view === 'ledger' ? 'app-shell-neighborhood' : ''
       }`}
     >
-
+      <header className="topbar">
+        <a className="brand" href="#top" aria-label="Youville home">
+          <span className="brand-mark"><ShieldCheck size={19} aria-hidden="true" /></span>
+          <span className="brand-name">youville<span>.</span></span>
+        </a>
+        <nav className="main-nav" aria-label="Main navigation">
+          <button className={view === 'scan' ? 'nav-active' : ''} onClick={() => setView('scan')}>Policy scanner</button>
+          <button className={view === 'ledger' ? 'nav-active' : ''} onClick={() => setView('ledger')}>My neighborhood</button>
+        </nav>
+        <div className="top-meta"><span className="offline-dot" /><span>Private by design</span><span className="top-divider" /><ShieldCheck size={16} aria-hidden="true" /></div>
+      </header>
 
       {view === 'scan' && (
         <ScanPage
